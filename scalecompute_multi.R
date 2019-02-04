@@ -22,6 +22,9 @@ negativeitems <- function(scale) {
 
 negative_index <- map(scalenames, function(x) {negativeitems(select(dataframe, contains(x))) })
 
+if(any(map_lgl(negative_index, any))) {
+  message("Some items were negatively correlated with total scale and were automatically reversed. \n Please Check.") }
+
 keys_negative <- map2(keys.list, negative_index, function(x,y) {
   x[y] <- str_c("-", x[y], sep = "")
   return(x)})
@@ -35,6 +38,7 @@ if(exclude == FALSE) {
   scaleout <- scoreItems(keys.list, keys_negative, impute = "none")
 }
 
+scaleout$keys.list <- negative_index
 return(scaleout)
 }
 
