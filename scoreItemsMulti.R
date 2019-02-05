@@ -8,7 +8,7 @@
 #' @return a list object holding scale scores and other information
 
 
-scalecompute_multi <- function(scalenames, dataframe, exclude = TRUE) {
+scoreItemsMulti <- function(scalenames, dataframe, exclude = TRUE) {
 
 exclude_helper <- function(scale) {
   # if exclude = TRUE, exclude all persons who have more than 1/3 NA
