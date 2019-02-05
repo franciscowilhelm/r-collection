@@ -1,4 +1,13 @@
-# this function takes the name of a scale and teh dataframe and returns the name of the scale and the output of scoreItems()
+#' Automatically score multiple scales and return several psychometrical scale parameters
+#' 
+#' This is a convenience wrapper for psych::scoreItems that allows automatically
+#' scoring multiple scales at once.
+#' @param scalenames character vector of scale names
+#' @param dataframe dataframe holding the items to be scored
+#' @param exclude Boolean indicating whether to exclude participant responses where more than 1/3 of a scale are NA.
+#' @return a list object holding scale scores and other information
+
+
 scalecompute_multi <- function(scalenames, dataframe, exclude = TRUE) {
 
 exclude_helper <- function(scale) {
@@ -23,7 +32,7 @@ negativeitems <- function(scale) {
 negative_index <- map(scalenames, function(x) {negativeitems(select(dataframe, contains(x))) })
 
 if(any(map_lgl(negative_index, any))) {
-  message("Some items were negatively correlated with total scale and were automatically reversed. \n Please Check.") }
+  message("Some items were negatively correlated with total scale and were automatically reversed. \n Please Check $keys.list.") }
 
 keys_negative <- map2(keys.list, negative_index, function(x,y) {
   x[y] <- str_c("-", x[y], sep = "")
@@ -35,7 +44,7 @@ if(exclude == TRUE) {
 }
 
 if(exclude == FALSE) {
-  scaleout <- scoreItems(keys.list, keys_negative, impute = "none")
+  scaleout <- scoreItems(keys_negative, dataframe_exclude, impute = "none")
 }
 
 scaleout$keys.list <- negative_index
