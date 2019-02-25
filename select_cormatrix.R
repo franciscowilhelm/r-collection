@@ -13,7 +13,11 @@ select_cormatrix <- function(matrix, vars, tri = T, cov = F) {
     diag(matrix) <- matdiag
   }
 
-  as.data.frame(matrix) %>%
+  matrix <- as.data.frame(matrix) %>%
     dplyr::select(toupper(vars)) %>%
-    .[toupper(vars),]
+    .[toupper(vars),] %>%
+    as.matrix()
+  
+  return(matrix)
+  
 }
