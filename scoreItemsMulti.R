@@ -20,16 +20,16 @@ exclude_helper <- function(scale) {
   }
 
 dataframe_exclude <- purrr::map_dfc(scalenames,
-                            function(x) {exclude_helper(scale = dplyr::select(dataframe, contains(x)))})
+                            function(x) {exclude_helper(scale = dplyr::select(dataframe, dplyr::contains(x)))})
 
-keys.list <- purrr::map(scalenames, function(x) {names(dplyr::select(dataframe, contains(x))) })
+keys.list <- purrr::map(scalenames, function(x) {names(dplyr::select(dataframe, dplyr::contains(x))) })
 names(keys.list) <- scalenames
 
 negativeitems <- function(scale) {
   psych::pca(scale)$loadings < 0
 }
 
-negative_index <- purrr::map(scalenames, function(x) {negativeitems(dplyr::select(dataframe, contains(x))) })
+negative_index <- purrr::map(scalenames, function(x) {negativeitems(dplyr::select(dataframe, dplyr::contains(x))) })
 
 if(any(purrr::map_lgl(negative_index, any))) {
   message("Some items were negatively correlated with total scale and were automatically reversed. \n Please Check $keys.list.") }
@@ -47,6 +47,9 @@ if(exclude == FALSE) {
   scaleout <- psych::scoreItems(keys_negative, dataframe_exclude, impute = "none")
 }
 
+scaleout$scores[] <- apply(scaleout$scores, 2, function(a) ifelse(is.nan(a), NA_real_, a))
+
+scaleout
 scaleout$keys.list <- negative_index
 return(scaleout)
 }
