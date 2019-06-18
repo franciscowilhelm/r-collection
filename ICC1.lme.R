@@ -20,7 +20,9 @@ ICC1.lme <- function (dv, grp, data)  {
   mod <- lmer(dv ~ 1 + (1 | grp), data = data, na.action=na.omit)
   mod_varcorr <- VarCorr(mod)
   t0 <-  attr(mod_varcorr$grp, "stddev")
+  t0 <- t0 * t0
   sig2 <- attr(mod_varcorr, "sc")
+  sig2 <- sig2 * sig2
   icc1 <- t0/(t0+sig2)
   names(icc1) <- dv
   return(icc1)
