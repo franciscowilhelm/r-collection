@@ -1,6 +1,7 @@
 ### function for gathering multiple scales at once.
 # Specifically designed for multilevel data of repeateud measures. Will create NAs for missing time points.
-gather_multilevel <- function(df, varlist, maxlevel1) {
+gather_multilevel <- function(df, varlist, maxlevel1, varnames) {
+  
   # first, gather all the scale scores separately.
   gatherlist <- map(varlist, function(x) df %>%
                       dplyr::select(contains(x)) %>%
@@ -12,6 +13,11 @@ gather_multilevel <- function(df, varlist, maxlevel1) {
   id <- gatherlist[[1]]$id
   time <- rep(0:(maxlevel1-1), length(unique(id)))
   scalevalue <- map_dfc(gatherlist, "value")
-  names(scalevalue) <- varlist
+  
+  if(missing(varnames)) {
+    names(scalevalue) <- varlist
+  } else {
+    names(scalevalue) <- varnames
+  }
   out <- cbind(id, time, scalevalue)
 }
