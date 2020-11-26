@@ -16,7 +16,9 @@ scoreItemsMulti <- function(scalenames, dataframe, exclude = TRUE) {
            stop(
              "For one or more scalenames no items could be found. Please check your scalenames/dataframe."
            )
-         })
+         }
+       } )
+       
          
          exclude_helper <- function(scale) {
            # if exclude = TRUE, exclude all persons who have more than 1/3 NA
