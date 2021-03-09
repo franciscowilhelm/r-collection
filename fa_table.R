@@ -16,7 +16,8 @@ fa_table <- function(x, varlabels = NULL, title = "Factor analysis results", dif
   factornamer <- function(nfactors) {
     paste0("Factor_", 1:nfactors)}
   
-  fnames <- factornamer(ncol(loadings))
+  nfactors <- ncol(loadings)
+  fnames <- factornamer(nfactors)
   names(loadings) <- fnames
   
   # prepare locations
@@ -47,14 +48,15 @@ fa_table <- function(x, varlabels = NULL, title = "Factor analysis results", dif
     # have unclear loadings
     return(removers)
   }
- 
- removable <- getRemovableItems(loadings)
- 
+ if(nfactors > 1) {
+   removable <- getRemovableItems(loadings)
+   cross_loadings <- purrr::map2(fnames, seq_along(fnames), function(f, i) {
+     (abs(loadings[,f] > cross)) & (factorindex != i) 
+   })
+ }
+
   small_loadings <- purrr::map(fnames, function(f) {
     abs(loadings[,f]) < small
-  })
-  cross_loadings <- purrr::map2(fnames, seq_along(fnames), function(f, i) {
-    (abs(loadings[,f] > cross)) & (factorindex != i) 
   })
   
   ind_table <- dplyr::tibble(varlabels, loadings) %>%
@@ -71,19 +73,26 @@ fa_table <- function(x, varlabels = NULL, title = "Factor analysis results", dif
                              locations = cells_body(columns = fnames[f], rows = small_loadings[[f]]))
   }
   # mark cross loadings
-  for(f in seq_along(fnames)) {
-    ind_table <- ind_table %>%  tab_style(style = cell_text(style = "italic"),
-                                    locations = cells_body(columns = fnames[f], rows = cross_loadings[[f]]))
+  
+  if (nfactors > 1) {
+    for (f in seq_along(fnames)) {
+      ind_table <-
+        ind_table %>%  tab_style(
+          style = cell_text(style = "italic"),
+          locations = cells_body(columns = fnames[f], rows = cross_loadings[[f]])
+        )
+    }
+    # mark non-assignable indicators
+    ind_table <-
+      ind_table %>%  tab_style(style = cell_fill(color = "#D93B3B"),
+                               locations = cells_body(rows = removable))
   }
-  # mark non-assignable indicators
-
-  ind_table <- ind_table %>%  tab_style(style = cell_fill(color = "#D93B3B"),
-                                  locations = cells_body(rows = removable))
-
+  
   # adapted from https://www.anthonyschmidt.co/post/2020-09-27-efa-tables-in-r/
   Vaccounted <- x[["Vaccounted"]]
-  Phi <- x[["Phi"]]
   colnames(Vaccounted) <- fnames 
+  if (nfactors > 1) {
+  Phi <- x[["Phi"]]
   rownames(Phi) <- fnames
   colnames(Phi) <- fnames
   f_table <- rbind(Vaccounted, Phi) %>%
@@ -91,7 +100,15 @@ fa_table <- function(x, varlabels = NULL, title = "Factor analysis results", dif
     rownames_to_column("Property") %>%
     mutate(across(where(is.numeric), round, 3)) %>%
     gt() %>% tab_header(title = "Eigenvalues, Variance Explained, and Factor Correlations for Rotated Factor Solution")
-  
+  }
+  else if(nfactors == 1) {
+    f_table <- rbind(Vaccounted) %>%
+      as.data.frame() %>% 
+      rownames_to_column("Property") %>%
+      mutate(across(where(is.numeric), round, 3)) %>%
+      gt() %>% tab_header(title = "Eigenvalues, Variance Explained, and Factor Correlations for Rotated Factor Solution")
+  }
+
   return(list("ind_table" = ind_table, "f_table" = f_table))
   
 }
