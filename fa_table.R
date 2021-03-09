@@ -6,6 +6,8 @@ fa_table <- function(x, varlabels = NULL, title = "Factor analysis results", dif
   require(gt)
   x <- psych::fa.sort(x)
   if(!is.null(varlabels)) {
+    if(length(varlabels) != nrow(x$loadings)) { warning("Number of variable labels and number of variables are unequal. Check your input!",
+                                                        call. = FALSE) }
     varlabels <- varlabels[x$order]
   }
   if(is.null(varlabels)) {varlabels <- rownames(x$loadings)}
