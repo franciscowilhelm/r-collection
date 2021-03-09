@@ -1,7 +1,4 @@
-# fa(df_scores_alt, nfactors = 3) %>% fa_table()
-
-
-fa_table <- function(x, varlabels = NULL, title = "Factor analysis results") {
+fa_table <- function(x, varlabels = NULL, title = "Factor analysis results", diffuse = .10, small = .30, cross = .20) {
   #get sorted loadings
   require(dplyr)
   require(purrr)
@@ -26,7 +23,7 @@ fa_table <- function(x, varlabels = NULL, title = "Factor analysis results") {
   factorindex <- apply(loadings, 1, function(x) which.max(abs(x)))
   
   # adapted from from sjplot: getremovableitems
-  getRemovableItems <- function(dataframe, fctr.load.tlrn = 0.1) {
+  getRemovableItems <- function(dataframe, fctr.load.tlrn = diffuse) {
     # clear vector
     removers <- vector(length = nrow(dataframe))
     # iterate each row of the data frame. each row represents
@@ -54,10 +51,10 @@ fa_table <- function(x, varlabels = NULL, title = "Factor analysis results") {
  removable <- getRemovableItems(loadings)
  
   small_loadings <- purrr::map(fnames, function(f) {
-    abs(loadings[,f]) < .30
+    abs(loadings[,f]) < small
   })
   cross_loadings <- purrr::map2(fnames, seq_along(fnames), function(f, i) {
-    (abs(loadings[,f] > .20)) & (factorindex != i) 
+    (abs(loadings[,f] > cross)) & (factorindex != i) 
   })
   
   ind_table <- dplyr::tibble(varlabels, loadings) %>%
@@ -84,15 +81,17 @@ fa_table <- function(x, varlabels = NULL, title = "Factor analysis results") {
                                   locations = cells_body(rows = removable))
 
   # adapted from https://www.anthonyschmidt.co/post/2020-09-27-efa-tables-in-r/
-  f_table <- rbind(x[["Vaccounted"]], x[["Phi"]]) %>%
-    as.data.frame() %>%
+  Vaccounted <- x[["Vaccounted"]]
+  Phi <- x[["Phi"]]
+  colnames(Vaccounted) <- fnames 
+  rownames(Phi) <- fnames
+  colnames(Phi) <- fnames
+  f_table <- rbind(Vaccounted, Phi) %>%
+    as.data.frame() %>% 
     rownames_to_column("Property") %>%
     mutate(across(where(is.numeric), round, 3)) %>%
     gt() %>% tab_header(title = "Eigenvalues, Variance Explained, and Factor Correlations for Rotated Factor Solution")
   
-  # print(ind_table)
-  # print(f_table)
   return(list("ind_table" = ind_table, "f_table" = f_table))
-  
   
 }
