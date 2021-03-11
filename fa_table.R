@@ -1,14 +1,18 @@
-fa_table <- function(x, varlabels = NULL, title = "Factor analysis results", diffuse = .10, small = .30, cross = .20) {
+fa_table <- function(x, varlabels = NULL, title = "Factor analysis results", diffuse = .10, small = .30, cross = .20, sort = TRUE) {
   #get sorted loadings
   require(dplyr)
   require(purrr)
   require(tibble)
   require(gt)
-  x <- psych::fa.sort(x)
+  if(sort == TRUE) {
+    x <- psych::fa.sort(x)
+  }
   if(!is.null(varlabels)) {
     if(length(varlabels) != nrow(x$loadings)) { warning("Number of variable labels and number of variables are unequal. Check your input!",
                                                         call. = FALSE) }
-    varlabels <- varlabels[x$order]
+    if(sort == TRUE) {
+      varlabels <- varlabels[x$order]
+      }
   }
   if(is.null(varlabels)) {varlabels <- rownames(x$loadings)}
 
