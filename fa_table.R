@@ -57,7 +57,7 @@ fa_table <- function(x, varlabels = NULL, title = "Factor analysis results", dif
  if(nfactors > 1) {
    removable <- getRemovableItems(loadings)
    cross_loadings <- purrr::map2(fnames, seq_along(fnames), function(f, i) {
-     (abs(loadings[,f] > cross)) & (factorindex != i) 
+     (abs(loadings[,f]) > cross) & (factorindex != i) 
    })
  }
 
