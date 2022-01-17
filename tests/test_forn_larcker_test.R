@@ -11,6 +11,6 @@ HS.model <- ' visual  =~ x1 + x2 + x3
 fit <- cfa(HS.model, HolzingerSwineford1939)
 
 forn_larcker_test(fit, x = c("visual", "speed"), y = c("visual", "textual", "speed"))
-forn_larcker_test(fit, x = c("visual"), y = c("visual", "textual", "speed"))
+forn_larcker_test(fit, x = c("visual"), y = c("textual", "speed"))
 forn_larcker_test(fit, x = c("visual", "speed"), y = c("textual"))
 
