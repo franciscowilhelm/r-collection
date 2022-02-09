@@ -54,17 +54,17 @@ convert_mplus <- function(file, varnames, maxclasses) {
     mutate(line_type = map_chr(out_coef$output, ~ mplus_line_classifier(.x, line_types_list))) %>%
     filter(line_type != "unclassified") %>% 
     mplus_parameters_parser(odd = FALSE, maxclasses = maxclasses) %>% 
-    mutate(ref_class = as.numeric(ref_class), y_class = as.numeric(str_extract(y_class, "\\d")))
+    mutate(ref_class = as.numeric(ref_class), y_class = as.numeric(str_extract(y_class, ".$")))
   out_odds <-
     out_odds %>%
     mutate(line_type = map_chr(out_odds$output, ~ mplus_line_classifier(.x, line_types_list))) %>%
     filter(line_type != "unclassified") %>% 
     mplus_parameters_parser(odd = TRUE, maxclasses = maxclasses) %>% 
-    mutate(ref_class = as.numeric(ref_class), y_class = as.numeric(str_extract(y_class, "\\d")))
+    mutate(ref_class = as.numeric(ref_class), y_class = as.numeric(str_extract(y_class, ".$")))
 
   
   
-  return(list(out_odds, out_coef))
+  return(list(out_coef, out_odds))
 }
 
 
@@ -112,7 +112,7 @@ mplus_line_classifier <- function(line, line_types_list) {
   
 # parses input lines line_type-specific
 
-mplus_parameters_parser <- function(lines_df, filter = TRUE, odd = TRUE, clustervar = "c1", maxclasses) {
+mplus_parameters_parser <- function(lines_df, filter = FALSE, odd = TRUE, clustervar = "c1", maxclasses) {
   # precreate df
   lines <- lines_df$output
   line_type <- lines_df$line_type
