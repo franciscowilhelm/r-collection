@@ -85,7 +85,8 @@ scoreItemsMulti <- function(scalenames, dataframe, exclude = TRUE, manual_keys =
   
   if (exclude == TRUE) {
     list_scored <-
-      purrr::map2(scalenames, keys_negative, function(name, keys) {
+      purrr::map(scalenames, function(name) {
+        keys <- keys_negative[[name]]
         subdf <- dataframe_exclude %>% select(starts_with(name))
         out <- psych::scoreItems(keys = keys, subdf, impute = "none")
         out$scores[] <-
@@ -96,19 +97,6 @@ scoreItemsMulti <- function(scalenames, dataframe, exclude = TRUE, manual_keys =
       })
   }
 
-  
-  # if (exclude == FALSE) {
-  #   list_scored <-
-  #     map2(scalenames, keys_negative, function(name, keys) {
-  #       subdf <- dataframe_exclude %>% select(starts_with(name))
-  #       out <- psych::scoreItems(keys = keys, subdf, impute = "none")
-  #       out$scores[] <-
-  #         apply(out$scores, 2, function(a) {
-  #           ifelse(is.nan(a), NA_real_, a)
-  #         })
-  #       return(out)
-  #     })
-  # }
 
   names(list_scored) <- scalenames
   scores <- purrr::map2_dfc(list_scored, scalenames, function(scale, name) {
