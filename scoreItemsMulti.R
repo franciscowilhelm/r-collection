@@ -5,11 +5,15 @@
 #' @param scalenames character vector of scale names
 #' @param dataframe dataframe holding the items to be scored
 #' @param exclude Boolean indicating whether to exclude participant responses where more than 1/3 of a scale are NA.
+#' @param manual_keys named list with manual keys, formatted like in scoreItems.
 #' @return a list object holding scale scores and other information
 # rewrite 2021/11/18: when scales have different number of response options reverse coding may bug out. this is fixed here by specifying each scale separately.
 
-scoreItemsMulti <- function(scalenames, dataframe, exclude = TRUE) {
-  walk(scalenames,
+scoreItemsMulti <- function(scalenames, dataframe, exclude = TRUE, manual_keys = NULL) {
+  
+  require(dplyr)
+  
+  purrr::walk(scalenames,
        function(x) {
          tmp <- dplyr::select(dataframe, starts_with(x))
          if (ncol(tmp) == 0) {
@@ -37,25 +41,27 @@ scoreItemsMulti <- function(scalenames, dataframe, exclude = TRUE) {
                                              function(x) {
                                                exclude_helper(scale = dplyr::select(dataframe_items, dplyr::starts_with(x)))
                                              })
+  scalenames_autoonly <- setdiff(scalenames, names(manual_keys)) # only auto generate keys for those where no manual keys are provided.
          
   keys.list <-
-    purrr::map(scalenames, function(x) {
+    purrr::map(scalenames_autoonly, function(x) {
       names(dplyr::select(dataframe_items, dplyr::starts_with(x)))
     })
-  names(keys.list) <- scalenames
+  names(keys.list) <- scalenames_autoonly
   
   negativeitems <- function(scale) {
     psych::pca(scale)$loadings < 0
   }
   
   negative_index <-
-    purrr::map(scalenames, function(x) {
+    purrr::map(scalenames_autoonly, function(x) {
       negativeitems(dplyr::select(dataframe_items, dplyr::starts_with(x)))
     })
   
+  
   if (any(purrr::map_lgl(negative_index, any))) {
     message(
-      "Some items were negatively correlated with total scale and were automatically reversed. \n Please Check $negative_index"
+      "Some items were negatively correlated with total scale and were (automatically) reversed. \n Please Check $negative_index"
     )
   }
   
@@ -65,10 +71,21 @@ scoreItemsMulti <- function(scalenames, dataframe, exclude = TRUE) {
       return(x)
     })
   
+  # manual keys
+  if (!is.null(manual_keys)) {
+    for (i in seq_along(manual_keys)) {
+      keys_negative[[names(manual_keys[i])]] <- manual_keys[[i]]
+      # create negative index based on manual inputs
+      negative_index[[names(manual_keys[i])]] <- ifelse(grepl("-", manual_keys[[i]], fixed = TRUE), TRUE, FALSE)
+    }
+  }
+  
+
+
   
   if (exclude == TRUE) {
     list_scored <-
-      map2(scalenames, keys_negative, function(name, keys) {
+      purrr::map2(scalenames, keys_negative, function(name, keys) {
         subdf <- dataframe_exclude %>% select(starts_with(name))
         out <- psych::scoreItems(keys = keys, subdf, impute = "none")
         out$scores[] <-
@@ -94,12 +111,12 @@ scoreItemsMulti <- function(scalenames, dataframe, exclude = TRUE) {
   # }
 
   names(list_scored) <- scalenames
-  scores <- map2_dfc(list_scored, scalenames, function(scale, name) {
+  scores <- purrr::map2_dfc(list_scored, scalenames, function(scale, name) {
     x <- data.frame(scale$scores)
     names(x) <- name
     return(x)
   })
-  alpha <-   map2_dfc(list_scored, scalenames, function(scale, name) {
+  alpha <-   purrr::map2_dfc(list_scored, scalenames, function(scale, name) {
     x <- data.frame(scale$alpha)
     names(x) <- name
     return(x)
