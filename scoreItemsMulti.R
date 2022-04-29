@@ -57,6 +57,7 @@ scoreItemsMulti <- function(scalenames, dataframe, exclude = TRUE, manual_keys =
     purrr::map(scalenames_autoonly, function(x) {
       negativeitems(dplyr::select(dataframe_items, dplyr::starts_with(x)))
     })
+  names(negative_index) <- scalenames_autoonly
   
   
   if (any(purrr::map_lgl(negative_index, any))) {
