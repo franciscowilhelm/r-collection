@@ -1,16 +1,15 @@
-#' Automatically score multiple scales and return several psychometrical scale parameters
-#'
-#' This is a convenience wrapper for psych::scoreItems that allows automatically
-#' scoring multiple scales at once.
-#' @param scalenames character vector of scale names
-#' @param dataframe dataframe holding the items to be scored
-#' @param exclude Boolean indicating whether to exclude participant responses where more than 1/3 of a scale are NA.
-#' @param manual_keys named list with manual keys, formatted like in scoreItems.
-#' @return a list object holding scale scores and other information
-# rewrite 2021/11/18: when scales have different number of response options reverse coding may bug out. this is fixed here by specifying each scale separately.
-
 scoreItemsMulti <- function(scalenames, dataframe, exclude = TRUE, manual_keys = NULL) {
-  
+  #' Automatically score multiple scales and return several psychometrical scale parameters
+  #'
+  #' This is a convenience wrapper for psych::scoreItems that allows automatically
+  #' scoring multiple scales at once.
+  #' @param scalenames character vector of scale names
+  #' @param dataframe dataframe holding the items to be scored
+  #' @param exclude Boolean indicating whether to exclude participant responses where more than 1/3 of a scale are NA.
+  #' @param manual_keys named list with manual keys, formatted like in scoreItems.
+  #' @return a list object holding scale scores and other information
+  # rewrite 2021/11/18: when scales have different number of response options reverse coding may bug out. this is fixed here by specifying each scale separately.
+
   require(dplyr)
   
   purrr::walk(scalenames,
