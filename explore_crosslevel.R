@@ -2,12 +2,48 @@
 # aim: function that automatically tests for cross level interactions in lme4 and Mplus
 
 # TODO: require "optimx" for optimizer
-explore_crosslevel_lme <- function(dataset, id, x, y, m, t = NULL) {
+explore_crosslevel_lme <- function(dataset, id, x, y, m, t = NULL, ar = NULL, random = FALSE, omit_direct = FALSE) {
   # generate model
   if (!is.null(t)) {
-    lme_formula <- str_c(y, " ~ ", "1 + ", t, "+", x, " + ", m, " + ", x, ":", m, " + ", "(1 +", x, "|", id, ")")
+    if(!is.null(ar)) {
+      if(random == TRUE) {
+        if(omit_direct == FALSE) {
+          lme_formula <- str_c(y, " ~ ", "1 + ", t, "+", x, " + ", m, " + ", x, ":", m, " + ", ar, " + ", "(1 +", x, "|", id, ")")
+        }
+        else if(omit_direct == TRUE) {
+          lme_formula <- str_c(y, " ~ ", "1 + ", t, "+", x, " + ", x, ":", m, " + ", ar, " + ", "(1 +", x, "|", id, ")")
+        }
+      }
+      else if(random == FALSE) {
+        if(omit_direct == FALSE) {
+          lme_formula <- str_c(y, " ~ ", "1 + ", t, "+", x, " + ", m, " + ", x, ":", m, " + ", ar, " + ", "(1|", id, ")")
+        }
+        else if(omit_direct == TRUE) {
+          lme_formula <- str_c(y, " ~ ", "1 + ", t, "+", x, " + ", x, ":", m, " + ", ar, " + ", "(1|", id, ")")
+        }
+      }
+    }
+    else if(is.null(ar)) {
+      if(omit_direct == FALSE) {
+        if(random == TRUE) {
+          lme_formula <- str_c(y, " ~ ", "1 + ", t, "+", x, " + ", m, " + ", x, ":", m, " + ", "(1 +", x, "|", id, ")")
+        }
+        else if(random == FALSE) {
+          lme_formula <- str_c(y, " ~ ", "1 + ", t, "+", x, " + ", m, " + ", x, ":", m, " + ", "(1|", id, ")")
+        }
+      }
+      if(omit_direct == TRUE) {
+        if(random == TRUE) {
+          lme_formula <- str_c(y, " ~ ", "1 + ", t, "+", x, " + ", x, ":", m, " + ", "(1 +", x, "|", id, ")")
+        }
+        else if(random == FALSE) {
+          lme_formula <- str_c(y, " ~ ", "1 + ", t, "+", x, " + ", x, ":", m, " + ", "(1|", id, ")")
+        }
+      }
+    }
   }
-  else {
+  else if (is.null(t)){
+    # not finalized (ar and random missing)
     lme_formula <- str_c(y, " ~ ", "1 + ", x, " + ", m, " + ", x, ":", m, " + ", "(1 +", x, "|", id, ")")
   }
   require(lmerTest)
@@ -18,14 +54,6 @@ explore_crosslevel_lme <- function(dataset, id, x, y, m, t = NULL) {
   return(out)
 }
 
-explore_crosslevel_lm <- function(dataset, x, y, m) {
-  # generate model
-    formula <- str_c(y, " ~ ", x, " + ", m, " + ", x, "*", m)
-    require(stats)
-    stats::lm(formula, data = dataset)
-  }
-
-# test <- explore_crosslevel_lme(data_scores_weekly_long_pcentered, "id", "hapa_pcenter", "csm_eng", "age", "time")
 
 explore_crosslevel_mplus <- function(dataset, id, x, y, m, t = NULL) {
   model_clm <- mplusObject(
