@@ -97,7 +97,7 @@ fa_table <- function(x, varlabels = NULL, title = "Factor analysis results", dif
   # adapted from https://www.anthonyschmidt.co/post/2020-09-27-efa-tables-in-r/
   Vaccounted <- x[["Vaccounted"]]
   colnames(Vaccounted) <- fnames 
-  if (nfactors > 1) {
+  if (nfactors > 1 & !(x$rotation %in% c("none", "varimax", "quartimax", "bentlerT", "equamax", "varimin", "geominT","bifactor"))) {
   Phi <- x[["Phi"]]
   rownames(Phi) <- fnames
   colnames(Phi) <- fnames
@@ -107,12 +107,12 @@ fa_table <- function(x, varlabels = NULL, title = "Factor analysis results", dif
     mutate(across(where(is.numeric), round, 3)) %>%
     gt() %>% tab_header(title = "Eigenvalues, Variance Explained, and Factor Correlations for Rotated Factor Solution")
   }
-  else if(nfactors == 1) {
+  else if(nfactors == 1 | x$rotation %in% c("none", "varimax", "quartimax", "bentlerT", "equamax", "varimin", "geominT","bifactor")) {
     f_table <- rbind(Vaccounted) %>%
       as.data.frame() %>% 
       rownames_to_column("Property") %>%
       mutate(across(where(is.numeric), round, 3)) %>%
-      gt() %>% tab_header(title = "Eigenvalues, Variance Explained, and Factor Correlations for Rotated Factor Solution")
+      gt() %>% tab_header(title = "Eigenvalues and Variance Explained for Factor Solution")
   }
 
   return(list("ind_table" = ind_table, "f_table" = f_table))
