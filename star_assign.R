@@ -1,0 +1,7 @@
+star_assign <- function(x) {
+  if(x < 0.001) "***"
+  else if (x < 0.01) "**"
+  else if (x < 0.05) "*"
+  else ""
+}
+vstar_assign <- Vectorize(star_assign)
