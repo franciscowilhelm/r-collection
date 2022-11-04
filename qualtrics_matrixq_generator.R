@@ -41,10 +41,9 @@ qualtrics_matrixq_responsescales <- function(inpfile, sheet, varcol, leadin, res
     tmp <- str_split(x, "_", simplify = TRUE)
     data.frame(scale = tmp[1], itemno = tmp[2])
   })
-  items <- items %>% mutate(itemtext = items_raw[,itemcol, drop = TRUE])
-  scalenames <- unique(items$scale)
+  items <- items %>% mutate(itemno = items_raw[,resp, drop = TRUE], itemtext = items_raw[,resplabel, drop = TRUE]) %>% filter(!is.na(itemtext))
+  return(items)
 }
-  
 
 
 # correlates <- read_xlsx("data/Item Ideas Merged 20210614.xlsx", sheet = 4)
