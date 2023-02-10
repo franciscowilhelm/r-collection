@@ -23,7 +23,8 @@ scoreItemsMulti <- function(scalenames, dataframe, exclude = TRUE, manual_keys =
        } )
   
   # select items from dataframe
-  dataframe_items <-  dplyr::select(dataframe, starts_with(all_of(scalenames)))
+  dataframe_items <-  dplyr::select(dataframe, starts_with(scalenames))
+  
   
   exclude_helper <- function(scale) {
            # if exclude = TRUE, exclude all persons who have more than 1/3 NA
