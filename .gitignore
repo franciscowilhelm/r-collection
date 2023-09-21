@@ -3,5 +3,4 @@
 .RData
 .Ruserdata
 .Rproj
-
-tests_private/*
+tests/private/*
