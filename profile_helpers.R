@@ -95,13 +95,14 @@ plot_profiles <- function(lpafit, df, scale_values = TRUE,
       theme(panel.background = element_rect(fill = 'white', color = 'white'),
             plot.background = element_rect(fill = 'white', color = 'white'),
             panel.grid.major = element_blank(), panel.grid.minor = element_blank(),   axis.ticks.y = element_line(), axis.line.y = element_line())
+    plot
     
-    if(!is.null(classlabels)) {
-      plot + scale_x_discrete(labels = labels(x$Class_r))
-    }
-    else if(is.null(classlabels)) {
-      plot + scale_x_discrete(labels = labels(x$Class_r))
-    }
+    # if(!is.null(classlabels)) {
+    #   plot + scale_x_discrete(labels = labels(classlabels))
+    # }
+    # else if(is.null(classlabels)) {
+    #   plot + scale_x_discrete(labels = labels(classlabels))
+    # }
 }
 
 # current

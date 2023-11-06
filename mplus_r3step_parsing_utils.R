@@ -64,7 +64,7 @@ convert_mplus <- function(file, varnames, maxclasses) {
 
   
   
-  return(list(out_coef, out_odds))
+  return(list(lr_coefs = out_coef, oddsratios = out_odds))
 }
 
 
@@ -142,12 +142,12 @@ mplus_parameters_parser <- function(lines_df, filter = FALSE, odd = TRUE, cluste
     }
     if(line_type[l] == "parameters" & odd == FALSE) {
       line <- stringi::stri_remove_empty(lines[[l]])
-      df[p,] <- tibble(ref_class = ref_class, y_class = y_class,
+      df[p,] <- tibble(ref_class = as.character(ref_class), y_class = y_class,
                    param = line[1], estimate = line[2], se = line[3], est_se = line[4], pval = line[5])
       p <- p+1
     } else if (line_type[l] == "parameters" & odd == TRUE) {
       line <- stringi::stri_remove_empty(lines[[l]])
-      df[p,] <- tibble(ref_class = ref_class, y_class = y_class,
+      df[p,] <- tibble(ref_class = as.character(ref_class), y_class = y_class,
                        param = line[1], estimate = line[2], se = line[3], ci_low = line[4], ci_up = line[5])
       p <- p+1
     }
@@ -172,4 +172,29 @@ mplus_parameters_parser <- function(lines_df, filter = FALSE, odd = TRUE, cluste
     df <- list_filtered %>% bind_rows()
   }
   return(df)
+}
+
+r3step_pubtable <- function(obj, digits = 2) {
+  # obj = object created by convert_mplus().
+  # table: predictors in rows, profile comparisons in columns. sub columns: a) for coef (se) sign. signs; b) OR column
+  lr_coefs <-  obj[["lr_coefs"]] |> arrange(ref_class, y_class)
+  oddsratios <-  obj[["oddsratios"]] |>  arrange(ref_class, y_class)
+  
+  # subset rows such that we have no duplicates
+  lr_coefs_subset <- lr_coefs |> filter(y_class > ref_class)
+  oddsratios_subset <- oddsratios |> filter(y_class > ref_class) |> filter(!is.na(estimate)) |> 
+    rename(or = estimate, or_se = se) # workaround of bugs, to be fixed
+  
+  # join oddsratios
+  tbl_combined <- left_join(lr_coefs_subset, oddsratios_subset, by = c('ref_class', 'y_class', "param")) |>
+    mutate(coef_se = str_c(round(estimate, digits), " (", round(se, digits), ")", vstar_assign(pval)),
+           or = round(or, digits))
+  
+  # pivot wider to create form
+  
+  tbl_combined_wide_lr <- pivot_wider(tbl_combined, id_cols = "param", names_from = c("ref_class", "y_class"), values_from = "coef_se")
+  tbl_combined_wide_or <- pivot_wider(tbl_combined, id_cols = "param", names_from = c("ref_class", "y_class"), values_from = "or")
+  
+  # formatting with subcolumns: tbd
+  return(list(lr = tbl_combined_wide_lr, or = tbl_combined_wide_or))
 }

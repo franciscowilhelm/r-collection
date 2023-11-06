@@ -8,3 +8,4 @@ plot_profiles(x, df_tmp, varnames = c("ceng_T1", "net_T1", "lea_T1", "env_T1", "
 plot_profiles(x, df_tmp, varnames = c("ceng_T1", "net_T1", "lea_T1", "env_T1", "shoi_T1"),
               varlabels = c("Engagement", "Network", "Learning", "Environment", "Shock Intensity"),
               arrange = "original")
+ 
