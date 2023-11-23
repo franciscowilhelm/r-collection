@@ -68,8 +68,8 @@ fa_table <- function(x, varlabels = NULL, title = "Factor analysis results", dif
   ind_table <- dplyr::tibble(varlabels, loadings) %>%
     dplyr::rename(Indicator = varlabels) %>% 
     dplyr::mutate(Communality = x$communality, Uniqueness = x$uniquenesses, Complexity = x$complexity) %>% 
-    dplyr::mutate(across(starts_with("Factor"), round, 3))  %>%
-    dplyr::mutate(across(c(Communality, Uniqueness, Complexity), round, 2))
+    dplyr::mutate(across(starts_with("Factor"), ~ round(.x, 3)))  %>%
+    dplyr::mutate(across(c(Communality, Uniqueness, Complexity), ~ round(.x, 2)))
                     
   
   ind_table <- ind_table %>% gt(rowname_col = "Indicator") %>% tab_header(title = title)
@@ -104,14 +104,14 @@ fa_table <- function(x, varlabels = NULL, title = "Factor analysis results", dif
   f_table <- rbind(Vaccounted, Phi) %>%
     as.data.frame() %>% 
     rownames_to_column("Property") %>%
-    mutate(across(where(is.numeric), round, 3)) %>%
+    mutate(across(where(is.numeric), ~ round(.x, 3))) %>%
     gt() %>% tab_header(title = "Eigenvalues, Variance Explained, and Factor Correlations for Rotated Factor Solution")
   }
   else if(nfactors == 1 | x$rotation %in% c("none", "varimax", "quartimax", "bentlerT", "equamax", "varimin", "geominT","bifactor")) {
     f_table <- rbind(Vaccounted) %>%
       as.data.frame() %>% 
       rownames_to_column("Property") %>%
-      mutate(across(where(is.numeric), round, 3)) %>%
+      mutate(across(where(is.numeric), ~ round(.x, 3))) %>%
       gt() %>% tab_header(title = "Eigenvalues and Variance Explained for Factor Solution")
   }
 
