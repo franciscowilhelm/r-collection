@@ -8,9 +8,19 @@
 # section parser only needs to understand alternative parameterizations
 # define section headers
 
-section_headers <- c("tests of categorical latent variable multinomial logistic regressions using",
+# updated 2023/11 for using with manual R3step method. 
+# notice that you have to edit sections manually for correct reading. Insert a line called "REGRESSION MARKER" for start.
+
+section_headers <- tolower(c("REGRESSION MARKER",
+  "tests of categorical latent variable multinomial logistic regressions using",
+                             "RESULTS IN PROBABILITY SCALE",
+                             "LATENT CLASS ODDS RATIO RESULTS",
                      "odds ratios for tests of categorical latent variable multinomial logistic regressions",
-                     "technical 1 output")
+                     "ODDS RATIO FOR THE ALTERNATIVE PARAMETERIZATIONS FOR THE CATEGORICAL LATENT VARIABLE REGRESSION",
+                     "ALTERNATIVE PARAMETERIZATIONS FOR THE CATEGORICAL LATENT VARIABLE REGRESSION",
+                     "LOGISTIC REGRESSION ODDS RATIO RESULTS",
+                     "BRANT WALD TEST FOR PROPORTIONAL ODDS",
+                     "technical 1 output"))
 
 
 mplus_section_parser <- function(mplustxt, chunknames) {
@@ -26,22 +36,33 @@ mplus_section_parser <- function(mplustxt, chunknames) {
 }
 
 # takes file, converts, creates sections
-convert_mplus <- function(file, varnames, maxclasses) {
+convert_mplus <- function(file, varnames, clustervar = "c", maxclasses) {
   # make varnames lower case
   varnames <- tolower(varnames)
   out <- read.delim(file, stringsAsFactors = FALSE)
   names(out) <- "output"
   out <- tibble(output = tolower(out$output)) %>% mutate(linenumber = row_number())
+  # discard everything before the last mention of residual variances
+  residual_mentioned <- out$output == " residual variances"
+  starthere <- max(which(residual_mentioned))
   
+  out <- out[starthere:nrow(out),]
   # generate section header column
   out$section <- mplus_section_parser(out$output, section_headers)
   #fill all section rows with corresponding section 
   out <- out %>% tidyr::fill(section,  .direction = "down")
   
   # discard sections which are not yet coded, create dataframe holding each of the sections (7/22/2020: odds ratios, normal coefficients)
-  out <- out %>% filter(section != 'TECHNICAL 1 OUTPUT')
-  out_coef <- out %>% filter(section == section_headers[1])
-  out_odds <- out %>% filter(section == section_headers[2])
+  out <- out %>% filter(section != tolower('TECHNICAL 1 OUTPUT') &
+                          section != tolower('BRANT WALD TEST FOR PROPORTIONAL ODDS') &
+                          section != tolower("results in probability scale")
+  )
+  out_coef <- out %>% filter(section == section_headers[1] |
+                               section ==  section_headers[2] |
+                               section == section_headers[7])
+  out_odds <- out %>% filter(section == section_headers[8] |
+                               section ==  section_headers[5] |
+                             section ==  section_headers[6])
   
   # because tidytext is unsutaible for mplus output, define another chain of string splits and trimmings
   out_odds$output <- map(out_odds$output, ~mplus_line_parser(.x))
@@ -53,13 +74,13 @@ convert_mplus <- function(file, varnames, maxclasses) {
     out_coef %>%
     mutate(line_type = map_chr(out_coef$output, ~ mplus_line_classifier(.x, line_types_list))) %>%
     filter(line_type != "unclassified") %>% 
-    mplus_parameters_parser(odd = FALSE, maxclasses = maxclasses) %>% 
+    mplus_parameters_parser(odd = FALSE, maxclasses = maxclasses, clustervar = clustervar) %>% 
     mutate(ref_class = as.numeric(ref_class), y_class = as.numeric(str_extract(y_class, ".$")))
   out_odds <-
     out_odds %>%
     mutate(line_type = map_chr(out_odds$output, ~ mplus_line_classifier(.x, line_types_list))) %>%
     filter(line_type != "unclassified") %>% 
-    mplus_parameters_parser(odd = TRUE, maxclasses = maxclasses) %>% 
+    mplus_parameters_parser(odd = TRUE, maxclasses = maxclasses, clustervar = clustervar) %>% 
     mutate(ref_class = as.numeric(ref_class), y_class = as.numeric(str_extract(y_class, ".$")))
 
   
@@ -112,7 +133,7 @@ mplus_line_classifier <- function(line, line_types_list) {
   
 # parses input lines line_type-specific
 
-mplus_parameters_parser <- function(lines_df, filter = FALSE, odd = TRUE, clustervar = "c1", maxclasses) {
+mplus_parameters_parser <- function(lines_df, filter = FALSE, odd = TRUE, clustervar, maxclasses) {
   # precreate df
   lines <- lines_df$output
   line_type <- lines_df$line_type
