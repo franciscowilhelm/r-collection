@@ -43,10 +43,10 @@ convert_mplus <- function(file, varnames, clustervar = "c", maxclasses) {
   names(out) <- "output"
   out <- tibble(output = tolower(out$output)) %>% mutate(linenumber = row_number())
   # discard everything before the last mention of residual variances
-  residual_mentioned <- out$output == " residual variances"
-  starthere <- max(which(residual_mentioned))
+  startmarker <- str_which(out$output, tolower("REGRESSION MARKER"))
+  # starthere <- max(which(startmarker))
   
-  out <- out[starthere:nrow(out),]
+  out <- out[startmarker:nrow(out),]
   # generate section header column
   out$section <- mplus_section_parser(out$output, section_headers)
   #fill all section rows with corresponding section 

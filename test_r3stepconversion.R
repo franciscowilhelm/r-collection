@@ -4,6 +4,11 @@ library(MplusAutomation)
 source("star_assign.R")
 
 # todo: esnure backwards compatibility with older, automatic r3step.
+x <- convert_mplus("tests/private/05c_c6_bch_step3.out",
+                   varnames = c("proa", "prom", "prev", "supo"),
+                   maxclasses = 5)
+
+# currently not compatible with r3step auto
 x <- convert_mplus("tests/private/profiledata/r3stepauto_cat_5.out",
                    varnames = c("PROACTIV", "PROMOTIO", "PREVENTI", "SUPH_GM", "SUPO_GM"),
                    maxclasses = 5)
