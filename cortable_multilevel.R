@@ -1,5 +1,5 @@
 cortable_multilevel <- function(df, varnames, grp) {
-  statsby_summary <- psych::statsBy(df |> select(all_of(varnames), all_of(grp)), group = grp)
+  statsby_summary <- psych::statsBy(df |> select( all_of(grp), all_of(varnames)), group = grp)
   
   icc <- statsby_summary$ICC1 |> 
     round(2) # runden
