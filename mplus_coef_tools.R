@@ -13,11 +13,22 @@ sep_label <- function(coefout) {
   return(coefout)
 }
 
-coef_wrapper <- function(model) {
+coef_wrapper <- function(model, label_replace, params = c('regression'), bayes = FALSE, addci = FALSE) {
+  #if(is.null(label_replace)) abort("Provide label_replace to substitute variable names.")
+  # get coefs
   testcoefs <-
-    coef(model, params = c('regression'))
+    coef(model, params = params)
+  # make p values two tailed (rough) if Bayes
+  if(bayes == TRUE) {
+    testcoefs <-  testcoefs |> mutate(pval = pval*2)
+  }
+  # add Confidence intervals
+  if(addci == TRUE) {
+    testcoefs <- left_join(testcoefs, confint(model,params), by = "Label")
+    
+  }
+  # add DV and IV and replace labels
   testcoefs <- sep_label(testcoefs)
-  
   testcoefs <-
     testcoefs |> mutate(DV = str_replace_all(DV, label_replace),
                         IV = str_replace_all(IV, label_replace))
