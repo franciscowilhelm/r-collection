@@ -13,8 +13,7 @@ sep_label <- function(coefout) {
   return(coefout)
 }
 
-coef_wrapper <- function(model, label_replace, params = c('regression'), bayes = FALSE, addci = FALSE) {
-  #if(is.null(label_replace)) abort("Provide label_replace to substitute variable names.")
+coef_wrapper <- function(model, label_replace = NULL, params = c('regression'), bayes = FALSE, addci = FALSE) {
   # get coefs
   testcoefs <-
     coef(model, params = params)
@@ -29,9 +28,12 @@ coef_wrapper <- function(model, label_replace, params = c('regression'), bayes =
   }
   # add DV and IV and replace labels
   testcoefs <- sep_label(testcoefs)
-  testcoefs <-
-    testcoefs |> mutate(DV = str_replace_all(DV, label_replace),
-                        IV = str_replace_all(IV, label_replace))
+  if(!is.null(label_replace)) {
+    testcoefs <-
+      testcoefs |> mutate(DV = str_replace_all(DV, label_replace),
+                          IV = str_replace_all(IV, label_replace))
+  }
+
   
   # testcoefs <- bind_rows(testcoefs, coef(model, params = 'new') |> select(Label, est, se, pval) |> mutate(IV = str_replace_all(Label, label_replace)))
   testcoefs
