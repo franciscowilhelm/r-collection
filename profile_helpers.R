@@ -19,6 +19,7 @@ rec_creator <- function(new, old) {
   for(i in seq_along(new)) {
     out[i] <- str_c(old[i], "=", new[i], ";")
   }
+  out <- paste0(out, collapse = "")
   return(out)
 }
 
