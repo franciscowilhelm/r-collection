@@ -46,7 +46,7 @@ qualtrics_matrixq_responsescales <- function(inpfile, sheet, varcol, leadin, res
   scalenames <- unique(items$scale)
   # leadin always written on first line of scale.
   leadin_out <- map(str_c(scalenames, "_1"), function(name) {
-    as.character(x[x$Var == name, "Instruction"] |> drop_na())
+    as.character(x[x[,varcol] == name, leadin] |> drop_na())
   })
   
   return(list(responses = items, leadin = leadin_out))
