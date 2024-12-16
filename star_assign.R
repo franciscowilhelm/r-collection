@@ -9,3 +9,6 @@ star_assign <- function(x) {
 }
 vstar_assign <- Vectorize(star_assign)
 
+star_assign_frompval <- function(num, pval) {
+  str_c(num, vstar_assign(pval))
+}
