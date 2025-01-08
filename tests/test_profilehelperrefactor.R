@@ -3,5 +3,11 @@ library(MplusAutomation)
 library(tidyverse)
 library(tidyLPA)
 
+source("profile_helpers.R")
+source("plot_profiles_refactor.R")
+
 load("tests/private/profiles_var_eq_wlsmv_winsor.RData")
+load("exampleData/temp.RData")
 plot_profiles(profiles_var_eq_wlsmv_winsor$model_1_class_4, bifscores_t2_wlsmv, varnames = c("gen", "hum", "mob", "net"))
+plot_profiles(m23_morin$config_class_6.out, bifscores, scale_values = FALSE, varnames = c("gen", "hum", "mob", "net"), class = "C1",
+              arrange = "var", arrange_var = "gen")

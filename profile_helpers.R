@@ -5,11 +5,18 @@ lpa_sort_by_g <- function(profile, varname) {
       group_by(Class) %>% summarise(mean_g = mean(Estimate))
   }
   else if("mplus.model" %in% class(profile)) {
-    mean_g <- profile[["parameters"]][["unstandardized"]] %>% filter(param == toupper(varname), paramHeader == "Means") %>% 
-      rename(Class = LatentClass) %>% mutate(Class = as.numeric(Class)) %>% 
-      group_by(Class) %>% summarise(mean_g = mean(est))
+    mean_g <- profile[["parameters"]][["unstandardized"]] |> filter(param == toupper(varname), paramHeader == "Means") %>% 
+      rename(Class = LatentClass)
+    if(str_detect(mean_g$Class[1], "#")) { # should also check if there are more than 1 classes , otherwise warning results
+      mean_g <- separate_wider_delim(mean_g, Class, names = c("ClassVariable", "Class"), delim = "#") |> 
+        mutate(Class = as.numeric(Class), ClassVariable = as.numeric(ClassVariable))
+    } else {
+      mean_g <- mean_g |> mutate(ClassVariable = 1, Class = as.numeric(Class)) 
+    }   
   }
-  mean_g <- mean_g %>% mutate(rank = rank(mean_g)) %>% arrange(rank)
+  mean_g <- mean_g %>%
+    group_by(ClassVariable, Class) %>% summarise(mean_g = mean(est)) %>% mutate(rank = rank(mean_g)) %>%
+    arrange(rank)
   return(mean_g)
 }
 
@@ -24,7 +31,20 @@ rec_creator <- function(new, old) {
 }
 
 
-plot_profiles <- function(lpafit, df, scale_values = TRUE, 
+# logit matrix strings for manual LTAs following Morin Litalien Webnote
+# get logits as instructed, and transform
+logitsyntax_helper <- function(logitmatrix) {
+  for (i in 1:nrow(logitmatrix)) {
+    for (j in 1:ncol(logitmatrix)) {
+      # Update the value at position (i, j) based on some logic
+      logitmatrix[i, j] <- str_c("[n", i, "#", j, "@", logitmatrix[i,j], "];")  # Example: Multiply row index by column index
+    }
+  }
+  return(logitmatrix)
+}
+
+
+plot_profiles_deprecated <- function(lpafit, df, scale_values = TRUE, 
                           varnames, varlabels = NULL, classlabels = NULL,
                           arrange = "original", arrange_values = NULL,
                           arrange_var = NULL,
@@ -106,8 +126,7 @@ plot_profiles <- function(lpafit, df, scale_values = TRUE,
     # }
 }
 
-# current
-plot_csm_profile <- function(lpafit, df = df_s3, scale_values = TRUE, classlabels = NULL, which_csm = "all", arrange = "g", arrange_values = NULL,
+plot_csm_profile_deprecated <- function(lpafit, df = df_s3, scale_values = TRUE, classlabels = NULL, which_csm = "all", arrange = "g", arrange_values = NULL,
                              classlabels_wrap = 10) {
   
   # add proportions to classlabel

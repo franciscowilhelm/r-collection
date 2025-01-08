@@ -39,3 +39,15 @@ r3step_pubtable(xqu_cor_converter)
 #   `4` = 2,
 #   `5` = 4
 # )
+
+# test output with multiple latent  class variables
+x_mc_c1 <- convert_mplus("tests/private/m23_lta_resave_m6.out",
+                   varnames = c("SENH", "SGRO", "JTI"),
+                   clustervar = "c1",
+                   maxclasses = 6)
+x_mc_c2 <- convert_mplus("tests/private/m23_lta_resave_m6.out",
+                      varnames = c("SENH", "SGRO", "JTI"),
+                      clustervar = "c2",
+                      maxclasses = 6)
+
+# these have to be spliced together mnauyll. moreover, alternative parameterizations are missing - reference is always 6!
