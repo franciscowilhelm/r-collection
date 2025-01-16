@@ -2,7 +2,9 @@
 lpa_sort_by_g <- function(profile, varname) {
   if("tidyProfile" %in% class(profile)) {
     mean_g <- profile %>% get_estimates() %>% filter(Parameter == varname, Category == "Means") %>% 
-      group_by(Class) %>% summarise(mean_g = mean(Estimate))
+      group_by(Class) %>% summarise(mean_g = mean(Estimate)) |> mutate(rank = rank(mean_g)) %>%
+      arrange(rank)
+      
   }
   else if("mplus.model" %in% class(profile)) {
     mean_g <- profile[["parameters"]][["unstandardized"]] |> filter(param == toupper(varname), paramHeader == "Means") %>% 
@@ -12,11 +14,12 @@ lpa_sort_by_g <- function(profile, varname) {
         mutate(Class = as.numeric(Class), ClassVariable = as.numeric(ClassVariable))
     } else {
       mean_g <- mean_g |> mutate(ClassVariable = 1, Class = as.numeric(Class)) 
-    }   
+    }
+    mean_g <- mean_g %>%
+      group_by(ClassVariable, Class) %>% summarise(mean_g = mean(est)) %>% mutate(rank = rank(mean_g)) %>%
+      arrange(rank)
   }
-  mean_g <- mean_g %>%
-    group_by(ClassVariable, Class) %>% summarise(mean_g = mean(est)) %>% mutate(rank = rank(mean_g)) %>%
-    arrange(rank)
+
   return(mean_g)
 }
 

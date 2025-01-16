@@ -8,7 +8,7 @@ plot_profiles <- function(lpafit, df, scale_values = TRUE,
   
   # add proportions to classlabel
   if("tidyProfile" %in% class(lpafit)) {
-    lpa_df <- lpafit[["dff"]] %>% select(all_of(Class)) #currently does not support class variable argument, revise
+    lpa_df <- lpafit[["dff"]] %>% select(all_of(class)) #currently does not support class variable argument, revise
     classlabels_prop <- str_c((lpafit[["model"]][["class_counts"]][["mostLikely"]][["proportion"]]*100) %>% round(1), "%")
   } 
   else if("mplus.model" %in% class(lpafit)) {
@@ -76,7 +76,7 @@ plot_profiles <- function(lpafit, df, scale_values = TRUE,
     # plotdat <- rename(plotdat, all_of(varnames))
   }
   plotdat_long <- plotdat %>%  pivot_longer(-Class_r) %>% 
-    mutate(name = as_factor(name)) %>% 
+    mutate(name = sjlabelled::as_factor(name)) %>% 
     mutate(Class = as.factor(Class_r))
   plot <- plotdat_long %>% 
     ggplot(aes(x = Class_r, y = value, fill = name)) +
