@@ -1,4 +1,4 @@
-qualtrics_matrixq_generator <- function(inpfile, sheet, varcol, itemcol, outfile) {
+qualtrics_matrixq_generator <- function(inpfile, sheet, varcol, itemcol) {
   require(readxl)
   require(tidyverse)
   x <- read_excel(inpfile, sheet)
@@ -25,8 +25,8 @@ qualtrics_matrixq_generator <- function(inpfile, sheet, varcol, itemcol, outfile
             "[Antwortoptionen einfuegen]",
             "", sep = "\n", collapse = "\n")
     })
-    cat(text, sep = "\n", file = outfile)
-  return(list(scalenames, itemtext_list, items))
+    #cat(text, sep = "\n", file = outfile)
+  return(list(scalenames = scalenames, itemtext_list = itemtext_list, text = text, items = items))
 }
 
 # # # todo: integrate the output returned from qualtrics_matrixq_generator function as x
@@ -34,20 +34,140 @@ qualtrics_matrixq_responsescales <- function(inpfile, sheet, varcol, leadin, res
   require(readxl)
   require(tidyverse)
   x <- read_excel(inpfile, sheet)
-  varnames <- purrr::as_vector(x[,varcol]) %>% str_split("_")
-  itemidx <- lapply(varnames, length) == 2 # where successfully split, indicate that it is an item. requires varcol to be well-formatted.
+  pattern <- "(?=(?:.*_.*))_"
+  varnames <- purrr::as_vector(x[,varcol]) %>% str_split (pattern)
+  itemidx <- (lapply(varnames, length) ==1 | lapply(varnames, length) ==2) # where successfully split, indicate that it is an item. requires varcol to be well-formatted.
   items_raw <- x[itemidx,]
-  items <- map_dfr(purrr::as_vector(items_raw[,varcol]), function(x) {
-    tmp <- str_split(x, "_", simplify = TRUE)
-    data.frame(scale = tmp[1], itemno = tmp[2])
-  })
-  items <- items %>% mutate(itemno = items_raw[,resp, drop = TRUE], itemtext = items_raw[,resplabel, drop = TRUE]) %>% filter(!is.na(itemtext))
+  
+  items <- str_split(items_raw |> select(all_of(varcol)) |> as_vector(), pattern, simplify = TRUE) |> 
+    as_tibble(.name_repair = c("universal")) |> rename(scale = ...1, no = ...2)
+  
+  items <- items %>% mutate(no = items_raw[,resp, drop = TRUE], itemtext = items_raw[,resplabel, drop = TRUE]) %>% filter(!is.na(itemtext))
   
   scalenames <- unique(items$scale)
-  # leadin always written on first line of scale.
-  leadin_out <- map(str_c(scalenames, "_1"), function(name) {
-    as.character(x[x[,varcol] == name, leadin] |> drop_na())
+  leadin_out <- map(scalenames, function(name) {
+    # Build a regular expression:
+    #   ^           : start of string
+    #   name        : the scalename
+    #   (           : start optional group
+    #     _\\d+     : underscore followed by one or more digits
+    #   )?          : end optional group (zero or one occurrence)
+    #   $           : end of string
+    pattern <- paste0("^", name, "(_\\d+)?$")
+    
+    # Filter rows in x based on the regex pattern
+    rows <- x[str_detect(x[, varcol, drop = TRUE], pattern), leadin]
+    
+    # Drop any NA values and convert to character vector
+    as.character(drop_na(rows))
   })
   
   return(list(responses = items, leadin = leadin_out))
+}
+
+#  # requires functions that Qualtrics does in fact not provide - recoding variable names rahter than choices/answers.
+# qualtrics_matrixq_generator_refactor <- function(inpfile, sheet, varcol, itemcol, common_scales = NULL) {
+#   # Load required packages
+#   require(readxl)
+#   require(tidyverse)
+#   
+#   # Read in the Excel sheet.
+#   x <- read_excel(inpfile, sheet)
+#   
+#   # Extract the variable names from the specified column and split on underscore.
+#   varnames <- purrr::as_vector(x[, varcol]) %>% str_split("_")
+#   
+#   # Identify rows where the split yields exactly two parts.
+#   itemidx <- lapply(varnames, length) == 2
+#   items_raw <- x[itemidx, ]
+#   
+#   # Build a data frame with:
+#   #   - 'scale': the first part of the varname (the original scale)
+#   #   - 'itemno': the second part (item number)
+#   #   - 'varname': the full variable name (needed for recode lines)
+#   items <- map_dfr(purrr::as_vector(items_raw[, varcol]), function(x) {
+#     tmp <- str_split(x, "_", simplify = TRUE)
+#     data.frame(scale   = tmp[1],
+#                itemno  = tmp[2],
+#                varname = x,
+#                stringsAsFactors = FALSE)
+#   })
+#   
+#   # Add the item text from the specified column.
+#   items <- items %>% mutate(itemtext = items_raw[, itemcol, drop = TRUE])
+#   
+#   ## --- Map to common scales if requested ---
+#   # If a common_scales mapping is provided (e.g. list(crq1 = c("oexp", "jmk", "ssk"))),
+#   # then for each item, check if its original scale appears in any mapping and update.
+#   if (!is.null(common_scales)) {
+#     items <- items %>% mutate(new_scale = map_chr(scale, function(s) {
+#       new_scale <- s
+#       for (common in names(common_scales)) {
+#         if (s %in% common_scales[[common]]) {
+#           new_scale <- common
+#           break
+#         }
+#       }
+#       new_scale
+#     }))
+#   } else {
+#     items <- items %>% mutate(new_scale = scale)
+#   }
+#   
+#   # Determine the unique new (reformatted) scales in order of appearance.
+#   old_scalenames <- unique(items$scale)
+#   new_scalenames <- unique(items$new_scale)
+#   
+#   ## --- Build the item text list with recode lines before each item ---
+#   # For each new scale group, process its items in order.
+#   # For every item, insert a recode line of the form: [[Choice:original_varname]]
+#   itemtext_list <- map(new_scalenames, function(ns) {
+#     items_group <- items %>% filter(new_scale == ns)
+#     map_chr(1:nrow(items_group), function(i) {
+#       recode_line <- paste0("[[Choice:", items_group$varname[i], "]]")
+#       # Each item is output as: recode line (on its own line) followed by the item text.
+#       paste(recode_line, items_group$itemtext[i], sep = "\n")
+#     })
+#   })
+#   names(itemtext_list) <- new_scalenames
+#   
+#   ## --- Create a mapping of new scale to original scale(s) ---
+#   # This mapping is returned so that you can see, for each new scale,
+#   # which original scale(s) contributed to it.
+#   mapping_df <- items %>%
+#     group_by(new_scale) %>%
+#     summarise(original_scales = paste(unique(scale), collapse = ", ")) %>%
+#     ungroup()
+#   
+#   ## --- Assemble the final output text ---
+#   # For each new scale group, create a block that includes:
+#   #  - A header line with both the new scale and (in parentheses) its original scale(s)
+#   #  - The series of items (each now preceded by its recode line)
+#   #  - A placeholder for answer options.
+#   text <- map2_chr(new_scalenames, seq_along(new_scalenames), function(ns, i) {
+#     orig <- mapping_df$original_scales[mapping_df$new_scale == ns]
+#     preheader <- c("[[Matrix]]")
+#     header <- paste0("[[ID:", ns, "]]\n", "Instruktion", "\n\n[[AdvancedChoices]]")
+#     group_items <- paste(itemtext_list[[ns]], collapse = "\n")
+#     str_c(preheader, header, group_items, "--Antwortoptionen einfuegen--", sep = "\n\n")
+#   })
+# 
+#   # Return a list containing:
+#   #   - new_scalenames: the reformatted scale names,
+#   #   - itemtext_list: a list of item texts (each with its recode line) by group,
+#   #   - items: the full items data frame (which includes both original 'scale' and new 'new_scale'),
+#   #   - scale_mapping: a data frame mapping each new scale to its original scale(s).
+#   return(list(
+#     old_scalenames = old_scalenames,
+#     new_scalenames = new_scalenames,
+#     itemtext_list  = itemtext_list,
+#     items          = items,
+#     scale_mapping  = mapping_df,
+#     text = text
+#   ))
+# }
+
+write_qualtricsgen <- function(text, outfile) {
+  # Write the assembled text to the output file.
+  cat(text, sep = "\n", file = outfile)
 }
