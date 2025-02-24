@@ -1,16 +1,74 @@
-qualtrics_matrixq_generator <- function(inpfile, sheet, varcol, itemcol) {
+qualtrics_matrixq_generator <- function(inpfile, sheet, varcol, itemcol, itemformat = "_number",
+                                        responses = FALSE,
+                                        leadin = NULL, resp = NULL, resplabel = NULL) {
   require(readxl)
   require(tidyverse)
   x <- read_excel(inpfile, sheet)
-  varnames <- purrr::as_vector(x[,varcol]) %>% str_split("_")
-  itemidx <- lapply(varnames, length) == 2 # where successfully split, indicate that it is an item. requires varcol to be well-formatted.
-  items_raw <- x[itemidx,]
-  items <- map_dfr(purrr::as_vector(items_raw[,varcol]), function(x) {
-    tmp <- str_split(x, "_", simplify = TRUE)
-    data.frame(scale = tmp[1], itemno = tmp[2])
-  })
-  items <- items %>% mutate(itemtext = items_raw[,itemcol, drop = TRUE])
-  scalenames <- unique(items$scale)
+  
+  if(itemformat == "_number") {
+    varnames <- purrr::as_vector(x[,varcol]) %>% str_split("_")
+    itemidx <- lapply(varnames, length) == 2 # where successfully split, indicate that it is an item. requires varcol to be well-formatted.
+    items_raw <- x[itemidx,]
+    items <- map_dfr(purrr::as_vector(items_raw[,varcol]), function(x) {
+      tmp <- str_split(x, "_", simplify = TRUE)
+      data.frame(scale = tmp[1], itemno = tmp[2])
+    })
+    items <- items %>% mutate(itemtext = items_raw[,itemcol, drop = TRUE])
+    scalenames <- unique(items$scale)
+  }
+  
+  
+  # stemonly - when only variable ame is given without numbering of items
+  
+  # first a helper function that checks non-consecutive uses of the scalename
+  checkNonConsecutive <- function(vec, target) {
+    # If vec is a data frame with one column, convert it to a vector
+    if (is.data.frame(vec)) {
+      if (ncol(vec) == 1) {
+        vec <- vec[[1]]
+      } else {
+        stop("Dataframe with more than one column provided. Please supply a single column or a vector.")
+      }
+    }
+    
+    # Ensure vec is a vector
+    vec <- as.vector(vec)
+    
+    # Find the indices where the target appears
+    idx <- which(vec == target)
+    
+    # If there are 0 or 1 occurrences, there's no possibility of non-consecutiveness
+    if (length(idx) <= 1) {
+      return(FALSE)
+    }
+    
+    # Check if all consecutive differences are exactly 1
+    return(any(diff(idx) != 1))
+  }
+  
+  # begin creation/extraction of items
+  if(itemformat == "stemonly") {
+    itemidx_lgl <- !is.na(x[,varcol]) & !is.na(x[,itemcol]) 
+    items_raw <- x[itemidx_lgl,] # items_raw contains all rows which are detected as items
+    scalenames <- unique(items_raw[,varcol]) |> simplify()
+    items <- map_dfr(scalenames, function(scale) {
+      if(checkNonConsecutive(items_raw[,varcol], scale)) {
+        stop("The variable/scale label is used non-consecutively. Please check for errors in codebook.")
+      }
+      items_of_scale <- items_raw |> filter(!!sym(varcol) == scale)
+      items_of_scale <- items_of_scale |> mutate(itemno = seq_len(nrow(items_of_scale))) |> 
+        rename(scale = varcol, itemtext = itemcol)
+      return(items_of_scale)
+    })
+    # optionally, response and instructions if on same sheet
+    if(responses == TRUE) {
+      responses_leadin_list <- map(scalenames, function(scale) {
+        resp_of_scale <- items_raw |> filter(!!sym(varcol) == scale)
+        leadin = resp_of_scale |> select(all_of(leadin)) |> drop_na() |> pull()
+        resp_of_scale <- resp_of_scale |> rename(resplabel = resplabel) |> pull(resplabel)
+        return(list(leadin = leadin, responses = resp_of_scale))
+    })
+    }
   
   itemtext_list <- map(scalenames, function(x) {
     items %>% filter(scale == x) %>% select(itemtext) %>% simplify()
@@ -26,11 +84,11 @@ qualtrics_matrixq_generator <- function(inpfile, sheet, varcol, itemcol) {
             "", sep = "\n", collapse = "\n")
     })
     #cat(text, sep = "\n", file = outfile)
-  return(list(scalenames = scalenames, itemtext_list = itemtext_list, text = text, items = items))
+  return(list(scalenames = scalenames, itemtext_list = itemtext_list, text = text, items = items, responses_leadin_list = responses_leadin_list))
 }
 
 # # # todo: integrate the output returned from qualtrics_matrixq_generator function as x
-qualtrics_matrixq_responsescales <- function(inpfile, sheet, varcol, leadin, resp, resplabel) {
+qualtrics_matrixq_responsescales <- function(inpfile, sheet, varcol, leadin, resp, resplabel, itemformat = "_number")
   require(readxl)
   require(tidyverse)
   x <- read_excel(inpfile, sheet)
