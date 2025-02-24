@@ -63,8 +63,14 @@ qualtrics_matrixq_generator <- function(inpfile, sheet, varcol, itemcol, itemfor
     # optionally, response and instructions if on same sheet
     if(responses == TRUE) {
       responses_leadin_list <- map(scalenames, function(scale) {
-        resp_of_scale <- items_raw |> filter(!!sym(varcol) == scale)
-        leadin = resp_of_scale |> select(all_of(leadin)) |> drop_na() |> pull()
+        # leadin
+        leadidx_lgl <- !is.na(x[,varcol]) & !is.na(x[,leadin])
+        leadraw <- x[leadidx_lgl,] |> filter(!!sym(varcol) == scale) # leadraw contains all rows with defined variable and instruction not na
+        leadin <- leadraw |> select(all_of(leadin)) |> drop_na() |> pull()
+        # response labels
+        respidx_lgl <- !is.na(x[,varcol]) & !is.na(x[,resplabel])  
+        respraw <- x[respidx_lgl,] # respraw contains all rows with defined variable and resplabel not na
+        resp_of_scale <- respraw |> filter(!!sym(varcol) == scale)
         resp_of_scale <- resp_of_scale |> rename(resplabel = resplabel) |> pull(resplabel)
         return(list(leadin = leadin, responses = resp_of_scale))
     })
