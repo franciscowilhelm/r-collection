@@ -4,3 +4,4 @@
 .Ruserdata
 .Rproj
 tests/private/*
+.DS_Store

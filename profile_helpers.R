@@ -425,3 +425,130 @@ bch_calculator <- function(profile, arrange = "g", arrange_values = NULL) {
 
   return(list(pairwise = tmp2, overall = bch_results$overall_alt, superscripts = bch_results$combined))
 }
+
+# function that compares pairwise results for BCH auxiliary variables (Distal outcomes) and summarizes them
+
+
+# Final concise comparison function
+summarize_comparisons_concise <- function(data) {
+  # First determine the relationship between each pair
+  relationships <- data %>%
+    mutate(relationship = case_when(
+      p < 0.05 & mean_classA > mean_classB ~ ">",
+      p < 0.05 & mean_classA < mean_classB ~ "<",
+      TRUE ~ "="  # Assume equality when not significant
+    ))
+  
+  # Create a summary dataframe to store all unique relationships
+  summary_df <- relationships %>%
+    select(classA, classB, relationship)
+  
+  # Create a list to store all class pairs with their canonical relationship
+  class_pairs <- list()
+  
+  # Process each row to determine the primary relationship
+  for (i in 1:nrow(summary_df)) {
+    classA <- summary_df$classA[i]
+    classB <- summary_df$classB[i]
+    rel <- summary_df$relationship[i]
+    
+    # Create a unique key for this pair (always ordered)
+    pair_key <- paste(sort(c(classA, classB)), collapse = "-")
+    
+    # Store the relationship with original direction
+    if (!pair_key %in% names(class_pairs)) {
+      class_pairs[[pair_key]] <- list(
+        first = as.character(classA),
+        second = as.character(classB),
+        relation = rel
+      )
+    }
+  }
+  
+  # Now build directional groups (for each class, what are all relations)
+  class_relations <- list()
+  
+  # Process each unique relationship
+  for (pair_key in names(class_pairs)) {
+    pair <- class_pairs[[pair_key]]
+    classA <- pair$first
+    classB <- pair$second
+    rel <- pair$relation
+    
+    # Initialize lists if needed
+    if (!classA %in% names(class_relations)) {
+      class_relations[[classA]] <- list(
+        less_than = character(0),
+        greater_than = character(0),
+        equal_to = character(0)
+      )
+    }
+    
+    if (!classB %in% names(class_relations)) {
+      class_relations[[classB]] <- list(
+        less_than = character(0),
+        greater_than = character(0),
+        equal_to = character(0)
+      )
+    }
+    
+    # Store the relationship in both directions
+    if (rel == "<") {
+      class_relations[[classA]]$less_than <- c(class_relations[[classA]]$less_than, classB)
+      class_relations[[classB]]$greater_than <- c(class_relations[[classB]]$greater_than, classA)
+    } else if (rel == ">") {
+      class_relations[[classA]]$greater_than <- c(class_relations[[classA]]$greater_than, classB)
+      class_relations[[classB]]$less_than <- c(class_relations[[classB]]$less_than, classA)
+    } else {  # rel == "="
+      class_relations[[classA]]$equal_to <- c(class_relations[[classA]]$equal_to, classB)
+      class_relations[[classB]]$equal_to <- c(class_relations[[classB]]$equal_to, classA)
+    }
+  }
+  
+  # Now create the final statements
+  statements <- character(0)
+  processed_equality <- character(0)
+  
+  # Get all classes sorted numerically
+  all_classes <- sort(as.numeric(names(class_relations)))
+  
+  # Process each class in order
+  for (cls in all_classes) {
+    cls_str <- as.character(cls)
+    relations <- class_relations[[cls_str]]
+    
+    # Process "less than" relationships
+    if (length(relations$less_than) > 0) {
+      lt_classes <- sort(as.numeric(unique(relations$less_than)))
+      statements <- c(statements, 
+                      paste0(cls, " < ", paste(lt_classes, collapse = ",")))
+    }
+    
+    # Process "equal to" relationships
+    if (length(relations$equal_to) > 0) {
+      eq_classes <- as.character(relations$equal_to)
+      new_eq_classes <- character(0)
+      
+      for (eq_cls in eq_classes) {
+        # Only include this if we haven't processed this pair before
+        pair_key <- paste(sort(c(cls_str, eq_cls)), collapse = "-")
+        if (!pair_key %in% processed_equality) {
+          processed_equality <- c(processed_equality, pair_key)
+          new_eq_classes <- c(new_eq_classes, eq_cls)
+        }
+      }
+      
+      if (length(new_eq_classes) > 0) {
+        eq_nums <- sort(as.numeric(new_eq_classes))
+        statements <- c(statements, 
+                        paste0(cls, " = ", paste(eq_nums, collapse = ",")))
+      }
+    }
+    
+    # We'll skip adding "greater than" relationships since they're redundant
+    # with the "less than" relationships from the other direction
+  }
+  
+  # Sort statements for consistent output and return
+  return(paste(sort(statements), collapse = "; "))
+}

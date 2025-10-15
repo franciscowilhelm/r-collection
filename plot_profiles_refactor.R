@@ -19,12 +19,12 @@ plot_profiles <- function(lpafit, df, scale_values = TRUE,
     if(has_name(lpafit[["class_counts"]][["mostLikely"]], "variable")) {
       classlabels_prop <- str_c((
         lpafit[["class_counts"]][["mostLikely"]] |> filter(variable == !!class) |>
-          mutate(proportion = (proportion * 100 |> round(1))) |> select(proportion) |> as_vector()
+          mutate(proportion = (proportion * 100) |> round(1)) |> select(proportion) |> as_vector()
       ), "%")
     } else {
       classlabels_prop <- str_c((
         lpafit[["class_counts"]][["mostLikely"]] |>
-          mutate(proportion = (proportion * 100 |> round(1))) |> select(proportion) |> as_vector()
+          mutate(proportion = (proportion * 100) |> round(1)) |> select(proportion) |> as_vector()
       ), "%")
     }
 
