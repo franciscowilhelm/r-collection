@@ -1,0 +1,489 @@
+Mplus VERSION 8.5
+MUTHEN & MUTHEN
+10/15/2025  10:33 AM
+
+INPUT INSTRUCTIONS
+
+  TITLE:	this is an example of two-level path
+  	analysis with continuous dependent
+  	variables and random slopes
+  DATA:	FILE IS ex9.5.dat;
+  VARIABLE:	NAMES ARE y1 y2 x1 x2 w clus;
+  	WITHIN = x1 x2;
+  	BETWEEN = w;
+  	CLUSTER IS clus;
+  ANALYSIS:	TYPE = TWOLEVEL RANDOM;
+  	ESTIMATOR = BAYES;
+  MODEL:
+  	%WITHIN%
+  	s2 | y2 ON y1;
+  	y2 ON x2;
+  	s1 | y1 ON x2;
+  	y1 ON x1;
+  	%BETWEEN%
+  	y1 y2 s1 s2 ON w;
+  OUTPUT:	TECH1 TECH8 CINTERVAL;
+
+
+
+INPUT READING TERMINATED NORMALLY
+
+
+
+this is an example of two-level path
+analysis with continuous dependent
+variables and random slopes
+
+SUMMARY OF ANALYSIS
+
+Number of groups                                                 1
+Number of observations                                         500
+
+Number of dependent variables                                    2
+Number of independent variables                                  3
+Number of continuous latent variables                            2
+
+Observed dependent variables
+
+  Continuous
+   Y1          Y2
+
+Observed independent variables
+   X1          X2          W
+
+Continuous latent variables
+   S2          S1
+
+Variables with special functions
+
+  Cluster variable      CLUS
+
+  Within variables
+   X1          X2
+
+  Between variables
+   W
+
+
+Estimator                                                    BAYES
+Specifications for Bayesian Estimation
+  Point estimate                                            MEDIAN
+  Number of Markov chain Monte Carlo (MCMC) chains               2
+  Random seed for the first chain                                0
+  Starting value information                           UNPERTURBED
+  Algorithm used for Markov chain Monte Carlo           GIBBS(PX1)
+  Convergence criterion                                  0.500D-01
+  Maximum number of iterations                               50000
+  K-th iteration used for thinning                               1
+
+Input data file(s)
+  ex9.5.dat
+Input data format  FREE
+
+
+SUMMARY OF DATA
+
+     Number of clusters                         90
+
+       Size (s)    Cluster ID with Size s
+
+          3        1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21
+                   22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39
+                   40 41 42 43 44 45 46 47 48 49 50
+          5        51 52 53 54 55 56 57 58 59 60
+         10        61 62 63 64 65 66 67 68 69 70 71 72 73 74 75 76 77 78
+                   79 80 81 82 83 84 85 86 87 88 89 90
+
+
+
+
+UNIVARIATE SAMPLE STATISTICS
+
+
+     UNIVARIATE HIGHER-ORDER MOMENT DESCRIPTIVE STATISTICS
+
+         Variable/         Mean/     Skewness/   Minimum/ % with                Percentiles
+        Sample Size      Variance    Kurtosis    Maximum  Min/Max      20%/60%    40%/80%    Median
+
+     Y1                   -0.132       0.110      -6.706    0.20%      -1.782     -0.639     -0.150
+             500.000       4.085       0.282       6.017    0.20%       0.254      1.381
+     Y2                    0.632       1.107      -6.558    0.20%      -1.702     -0.568      0.092
+             500.000      10.377       1.751      14.772    0.20%       0.557      2.584
+     X1                   -0.040      -0.008      -2.926    0.20%      -0.875     -0.305     -0.039
+             500.000       1.013       0.012       2.846    0.20%       0.161      0.790
+     X2                    0.015      -0.088      -3.060    0.20%      -0.884     -0.236      0.048
+             500.000       1.155      -0.306       3.217    0.20%       0.283      0.905
+     W                    -0.130      -0.367      -2.154    1.11%      -0.935     -0.218      0.002
+              90.000       0.810      -0.601       1.513    1.11%       0.241      0.670
+
+
+THE MODEL ESTIMATION TERMINATED NORMALLY
+
+     USE THE FBITERATIONS OPTION TO INCREASE THE NUMBER OF ITERATIONS BY A FACTOR
+     OF AT LEAST TWO TO CHECK CONVERGENCE AND THAT THE PSR VALUE DOES NOT INCREASE.
+
+
+
+MODEL FIT INFORMATION
+
+Number of Free Parameters                              17
+
+Information Criteria
+
+          Deviance (DIC)                         3160.032
+          Estimated Number of Parameters (pD)     260.716
+
+
+
+MODEL RESULTS
+
+                                Posterior  One-Tailed         95% C.I.
+                    Estimate       S.D.      P-Value   Lower 2.5%  Upper 2.5%  Significance
+
+Within Level
+
+ Y2         ON
+    X2                 0.536       0.053      0.000       0.413       0.633      *
+
+ Y1         ON
+    X1                 0.303       0.055      0.000       0.178       0.399      *
+
+ Residual Variances
+    Y1                 1.154       0.098      0.000       0.956       1.333      *
+    Y2                 0.933       0.076      0.000       0.806       1.104      *
+
+Between Level
+
+ S1         ON
+    W                  0.304       0.113      0.000       0.096       0.555      *
+
+ S2         ON
+    W                  0.675       0.121      0.000       0.400       0.908      *
+
+ Y1         ON
+    W                  1.076       0.110      0.000       0.824       1.257      *
+
+ Y2         ON
+    W                  1.511       0.189      0.000       1.126       1.849      *
+
+ Y2       WITH
+    Y1                 0.512       0.179      0.000       0.258       0.935      *
+
+ Intercepts
+    Y1                -0.019       0.107      0.460      -0.231       0.198
+    Y2                 0.566       0.161      0.000       0.209       0.849      *
+    S2                 0.825       0.108      0.000       0.597       1.042      *
+    S1                 0.466       0.107      0.000       0.273       0.671      *
+
+ Residual Variances
+    Y1                 0.587       0.142      0.000       0.344       0.907      *
+    Y2                 1.980       0.398      0.000       1.218       2.767      *
+    S2                 0.887       0.193      0.000       0.557       1.254      *
+    S1                 0.542       0.126      0.000       0.359       0.851      *
+
+
+CREDIBILITY INTERVALS OF MODEL RESULTS
+
+                  Lower .5%  Lower 2.5%    Lower 5%    Estimate    Upper 5%  Upper 2.5%   Upper .5%
+
+Within Level
+
+ Y2       ON
+    X2               0.393       0.413       0.447       0.536       0.617       0.633       0.645
+
+ Y1       ON
+    X1               0.140       0.178       0.209       0.303       0.379       0.399       0.476
+
+ Residual Variances
+    Y1               0.933       0.956       0.982       1.154       1.301       1.333       1.509
+    Y2               0.795       0.806       0.818       0.933       1.071       1.104       1.160
+
+Between Level
+
+ S1       ON
+    W                0.023       0.096       0.129       0.304       0.492       0.555       0.560
+
+ S2       ON
+    W                0.342       0.400       0.466       0.675       0.858       0.908       0.989
+
+ Y1       ON
+    W                0.789       0.824       0.837       1.076       1.221       1.257       1.331
+
+ Y2       ON
+    W                1.044       1.126       1.159       1.511       1.805       1.849       1.855
+
+ Y2       WITH
+    Y1               0.205       0.258       0.283       0.512       0.873       0.935       1.038
+
+ Intercepts
+    Y1              -0.264      -0.231      -0.196      -0.019       0.176       0.198       0.224
+    Y2               0.136       0.209       0.269       0.566       0.798       0.849       0.969
+    S2               0.555       0.597       0.639       0.825       1.003       1.042       1.077
+    S1               0.252       0.273       0.294       0.466       0.658       0.671       0.741
+
+ Residual Variances
+    Y1               0.294       0.344       0.371       0.587       0.828       0.907       1.093
+    Y2               1.096       1.218       1.296       1.980       2.715       2.767       2.824
+    S2               0.511       0.557       0.594       0.887       1.223       1.254       1.359
+    S1               0.355       0.359       0.373       0.542       0.799       0.851       0.909
+
+
+TECHNICAL 1 OUTPUT
+
+
+     PARAMETER SPECIFICATION FOR WITHIN
+
+
+           NU
+              Y1            Y2            X1            X2
+              ________      ________      ________      ________
+                    0             0             0             0
+
+
+           LAMBDA
+              Y1            Y2            X1            X2
+              ________      ________      ________      ________
+ Y1                 0             0             0             0
+ Y2                 0             0             0             0
+ X1                 0             0             0             0
+ X2                 0             0             0             0
+
+
+           THETA
+              Y1            Y2            X1            X2
+              ________      ________      ________      ________
+ Y1                 0
+ Y2                 0             0
+ X1                 0             0             0
+ X2                 0             0             0             0
+
+
+           ALPHA
+              Y1            Y2            X1            X2
+              ________      ________      ________      ________
+                    0             0             0             0
+
+
+           BETA
+              Y1            Y2            X1            X2
+              ________      ________      ________      ________
+ Y1                 0             0             1             0
+ Y2                 0             0             0             2
+ X1                 0             0             0             0
+ X2                 0             0             0             0
+
+
+           PSI
+              Y1            Y2            X1            X2
+              ________      ________      ________      ________
+ Y1                 3
+ Y2                 0             4
+ X1                 0             0             0
+ X2                 0             0             0             0
+
+
+     PARAMETER SPECIFICATION FOR BETWEEN
+
+
+           NU
+              Y1            Y2            W
+              ________      ________      ________
+                    0             0             0
+
+
+           LAMBDA
+              S2            S1            Y1            Y2            W
+              ________      ________      ________      ________      ________
+ Y1                 0             0             0             0             0
+ Y2                 0             0             0             0             0
+ W                  0             0             0             0             0
+
+
+           THETA
+              Y1            Y2            W
+              ________      ________      ________
+ Y1                 0
+ Y2                 0             0
+ W                  0             0             0
+
+
+           ALPHA
+              S2            S1            Y1            Y2            W
+              ________      ________      ________      ________      ________
+                    5             6             7             8             0
+
+
+           BETA
+              S2            S1            Y1            Y2            W
+              ________      ________      ________      ________      ________
+ S2                 0             0             0             0             9
+ S1                 0             0             0             0            10
+ Y1                 0             0             0             0            11
+ Y2                 0             0             0             0            12
+ W                  0             0             0             0             0
+
+
+           PSI
+              S2            S1            Y1            Y2            W
+              ________      ________      ________      ________      ________
+ S2                13
+ S1                 0            14
+ Y1                 0             0            15
+ Y2                 0             0            16            17
+ W                  0             0             0             0             0
+
+
+     STARTING VALUES FOR WITHIN
+
+
+           NU
+              Y1            Y2            X1            X2
+              ________      ________      ________      ________
+                0.000         0.000         0.000         0.000
+
+
+           LAMBDA
+              Y1            Y2            X1            X2
+              ________      ________      ________      ________
+ Y1             1.000         0.000         0.000         0.000
+ Y2             0.000         1.000         0.000         0.000
+ X1             0.000         0.000         1.000         0.000
+ X2             0.000         0.000         0.000         1.000
+
+
+           THETA
+              Y1            Y2            X1            X2
+              ________      ________      ________      ________
+ Y1             0.000
+ Y2             0.000         0.000
+ X1             0.000         0.000         0.000
+ X2             0.000         0.000         0.000         0.000
+
+
+           ALPHA
+              Y1            Y2            X1            X2
+              ________      ________      ________      ________
+                0.000         0.000         0.000         0.000
+
+
+           BETA
+              Y1            Y2            X1            X2
+              ________      ________      ________      ________
+ Y1             0.000         0.000         0.000         0.000
+ Y2             0.000         0.000         0.000         0.000
+ X1             0.000         0.000         0.000         0.000
+ X2             0.000         0.000         0.000         0.000
+
+
+           PSI
+              Y1            Y2            X1            X2
+              ________      ________      ________      ________
+ Y1             2.042
+ Y2             0.000         5.189
+ X1             0.000         0.000         0.507
+ X2             0.000         0.000         0.000         0.578
+
+
+     STARTING VALUES FOR BETWEEN
+
+
+           NU
+              Y1            Y2            W
+              ________      ________      ________
+                0.000         0.000         0.000
+
+
+           LAMBDA
+              S2            S1            Y1            Y2            W
+              ________      ________      ________      ________      ________
+ Y1             0.000         0.000         1.000         0.000         0.000
+ Y2             0.000         0.000         0.000         1.000         0.000
+ W              0.000         0.000         0.000         0.000         1.000
+
+
+           THETA
+              Y1            Y2            W
+              ________      ________      ________
+ Y1             0.000
+ Y2             0.000         0.000
+ W              0.000         0.000         0.000
+
+
+           ALPHA
+              S2            S1            Y1            Y2            W
+              ________      ________      ________      ________      ________
+                0.000         0.000        -0.132         0.632         0.000
+
+
+           BETA
+              S2            S1            Y1            Y2            W
+              ________      ________      ________      ________      ________
+ S2             0.000         0.000         0.000         0.000         0.000
+ S1             0.000         0.000         0.000         0.000         0.000
+ Y1             0.000         0.000         0.000         0.000         0.000
+ Y2             0.000         0.000         0.000         0.000         0.000
+ W              0.000         0.000         0.000         0.000         0.000
+
+
+           PSI
+              S2            S1            Y1            Y2            W
+              ________      ________      ________      ________      ________
+ S2             1.000
+ S1             0.000         1.000
+ Y1             0.000         0.000         2.042
+ Y2             0.000         0.000         0.000         5.189
+ W              0.000         0.000         0.000         0.000         0.402
+
+
+
+     PRIORS FOR ALL PARAMETERS            PRIOR MEAN      PRIOR VARIANCE     PRIOR STD. DEV.
+
+     Parameter 1~N(0.000,infinity)           0.0000            infinity            infinity
+     Parameter 2~N(0.000,infinity)           0.0000            infinity            infinity
+     Parameter 3~IG(-1.000,0.000)          infinity            infinity            infinity
+     Parameter 4~IG(-1.000,0.000)          infinity            infinity            infinity
+     Parameter 5~N(0.000,infinity)           0.0000            infinity            infinity
+     Parameter 6~N(0.000,infinity)           0.0000            infinity            infinity
+     Parameter 7~N(0.000,infinity)           0.0000            infinity            infinity
+     Parameter 8~N(0.000,infinity)           0.0000            infinity            infinity
+     Parameter 9~N(0.000,infinity)           0.0000            infinity            infinity
+     Parameter 10~N(0.000,infinity)          0.0000            infinity            infinity
+     Parameter 11~N(0.000,infinity)          0.0000            infinity            infinity
+     Parameter 12~N(0.000,infinity)          0.0000            infinity            infinity
+     Parameter 13~IG(-1.000,0.000)         infinity            infinity            infinity
+     Parameter 14~IG(-1.000,0.000)         infinity            infinity            infinity
+     Parameter 15~IW(0.000,-3)             infinity            infinity            infinity
+     Parameter 16~IW(0.000,-3)             infinity            infinity            infinity
+     Parameter 17~IW(0.000,-3)             infinity            infinity            infinity
+
+
+TECHNICAL 8 OUTPUT
+
+
+   TECHNICAL 8 OUTPUT FOR BAYES ESTIMATION
+
+     CHAIN    BSEED
+     1        0
+     2        285380
+
+                     POTENTIAL       PARAMETER WITH
+     ITERATION    SCALE REDUCTION      HIGHEST PSR
+     100              1.050               17
+
+
+     Beginning Time:  10:33:16
+        Ending Time:  10:33:17
+       Elapsed Time:  00:00:01
+
+
+
+MUTHEN & MUTHEN
+3463 Stoner Ave.
+Los Angeles, CA  90066
+
+Tel: (310) 391-9971
+Fax: (310) 391-8971
+Web: www.StatModel.com
+Support: Support@StatModel.com
+
+Copyright (c) 1998-2020 Muthen & Muthen

@@ -1,0 +1,468 @@
+Mplus VERSION 8.5
+MUTHEN & MUTHEN
+10/15/2025  10:33 AM
+
+INPUT INSTRUCTIONS
+
+  TITLE:	this is an example of two-level path
+  	analysis with continuous dependent
+  	variables and random slopes
+  DATA:	FILE IS ex9.5.dat;
+  VARIABLE:	NAMES ARE y1 y2 x1 x2 w clus;
+  	WITHIN = x1 x2;
+  	BETWEEN = w;
+  	CLUSTER IS clus;
+  ANALYSIS:	TYPE = TWOLEVEL RANDOM;
+  	ALGORITHM = INTEGRATION;
+  MODEL:
+  	%WITHIN%
+  	s2 | y2 ON y1;
+  	y2 ON x2;
+  	s1 | y1 ON x2;
+  	y1 ON x1;
+  	%BETWEEN%
+  	y1 y2 s1 s2 ON w;
+  OUTPUT:	TECH1 TECH8;
+
+
+
+*** WARNING in MODEL command
+  In the MODEL command, the predictor variable on the WITHIN level refers to the whole observed
+  variable.  To use the latent within-level part, use ESTIMATOR=BAYES in the ANALYSIS command.
+  This applies to the following statement(s):
+    S2 | Y2 ON Y1
+   1 WARNING(S) FOUND IN THE INPUT INSTRUCTIONS
+
+
+
+this is an example of two-level path
+analysis with continuous dependent
+variables and random slopes
+
+SUMMARY OF ANALYSIS
+
+Number of groups                                                 1
+Number of observations                                         500
+
+Number of dependent variables                                    2
+Number of independent variables                                  3
+Number of continuous latent variables                            2
+
+Observed dependent variables
+
+  Continuous
+   Y1          Y2
+
+Observed independent variables
+   X1          X2          W
+
+Continuous latent variables
+   S2          S1
+
+Variables with special functions
+
+  Cluster variable      CLUS
+
+  Within variables
+   X1          X2
+
+  Between variables
+   W
+
+
+Estimator                                                      MLR
+Information matrix                                        OBSERVED
+Optimization Specifications for the Quasi-Newton Algorithm for
+Continuous Outcomes
+  Maximum number of iterations                                 100
+  Convergence criterion                                  0.100D-05
+Optimization Specifications for the EM Algorithm
+  Maximum number of iterations                                 500
+  Convergence criteria
+    Loglikelihood change                                 0.100D-02
+    Relative loglikelihood change                        0.100D-05
+    Derivative                                           0.100D-02
+Optimization Specifications for the M step of the EM Algorithm for
+Categorical Latent variables
+  Number of M step iterations                                    1
+  M step convergence criterion                           0.100D-02
+  Basis for M step termination                           ITERATION
+Optimization Specifications for the M step of the EM Algorithm for
+Censored, Binary or Ordered Categorical (Ordinal), Unordered
+Categorical (Nominal) and Count Outcomes
+  Number of M step iterations                                    1
+  M step convergence criterion                           0.100D-02
+  Basis for M step termination                           ITERATION
+  Maximum value for logit thresholds                            15
+  Minimum value for logit thresholds                           -15
+  Minimum expected cell size for chi-square              0.100D-01
+Optimization algorithm                                         EMA
+Integration Specifications
+  Type                                                    STANDARD
+  Number of integration points                                  15
+  Dimensions of numerical integration                            0
+  Adaptive quadrature                                           ON
+Cholesky                                                       OFF
+
+Input data file(s)
+  ex9.5.dat
+Input data format  FREE
+
+
+SUMMARY OF DATA
+
+     Number of clusters                         90
+
+
+
+
+UNIVARIATE SAMPLE STATISTICS
+
+
+     UNIVARIATE HIGHER-ORDER MOMENT DESCRIPTIVE STATISTICS
+
+         Variable/         Mean/     Skewness/   Minimum/ % with                Percentiles
+        Sample Size      Variance    Kurtosis    Maximum  Min/Max      20%/60%    40%/80%    Median
+
+     Y1                   -0.132       0.110      -6.706    0.20%      -1.782     -0.639     -0.150
+             500.000       4.085       0.282       6.017    0.20%       0.254      1.381
+     Y2                    0.632       1.107      -6.558    0.20%      -1.702     -0.568      0.092
+             500.000      10.377       1.751      14.772    0.20%       0.557      2.584
+     X1                   -0.040      -0.008      -2.926    0.20%      -0.875     -0.305     -0.039
+             500.000       1.013       0.012       2.846    0.20%       0.161      0.790
+     X2                    0.015      -0.088      -3.060    0.20%      -0.884     -0.236      0.048
+             500.000       1.155      -0.306       3.217    0.20%       0.283      0.905
+     W                    -0.130      -0.367      -2.154    1.11%      -0.935     -0.218      0.002
+              90.000       0.810      -0.601       1.513    1.11%       0.241      0.670
+
+
+THE MODEL ESTIMATION TERMINATED NORMALLY
+
+
+
+MODEL FIT INFORMATION
+
+Number of Free Parameters                       17
+
+Loglikelihood
+
+          H0 Value                       -1663.599
+          H0 Scaling Correction Factor      1.0333
+            for MLR
+
+Information Criteria
+
+          Akaike (AIC)                    3361.198
+          Bayesian (BIC)                  3432.847
+          Sample-Size Adjusted BIC        3378.888
+            (n* = (n + 2) / 24)
+
+
+
+MODEL RESULTS
+
+                                                    Two-Tailed
+                    Estimate       S.E.  Est./S.E.    P-Value
+
+Within Level
+
+ Y2         ON
+    X2                 0.531      0.049     10.917      0.000
+
+ Y1         ON
+    X1                 0.300      0.062      4.848      0.000
+
+ Residual Variances
+    Y1                 1.080      0.064     16.954      0.000
+    Y2                 0.957      0.076     12.606      0.000
+
+Between Level
+
+ S1         ON
+    W                  0.277      0.106      2.603      0.009
+
+ S2         ON
+    W                  0.631      0.112      5.652      0.000
+
+ Y1         ON
+    W                  1.206      0.110     10.973      0.000
+
+ Y2         ON
+    W                  0.825      0.098      8.441      0.000
+
+ Y2       WITH
+    Y1                -0.048      0.090     -0.537      0.591
+
+ Intercepts
+    Y1                -0.011      0.102     -0.106      0.916
+    Y2                -0.062      0.081     -0.767      0.443
+    S2                 0.819      0.105      7.784      0.000
+    S1                 0.428      0.097      4.420      0.000
+
+ Residual Variances
+    Y1                 0.600      0.110      5.433      0.000
+    Y2                 0.214      0.084      2.553      0.011
+    S2                 0.735      0.190      3.864      0.000
+    S1                 0.498      0.106      4.698      0.000
+
+
+QUALITY OF NUMERICAL RESULTS
+
+     Condition Number for the Information Matrix              0.446E-01
+       (ratio of smallest to largest eigenvalue)
+
+
+TECHNICAL 1 OUTPUT
+
+
+     PARAMETER SPECIFICATION FOR WITHIN
+
+
+           NU
+              Y1            Y2            X1            X2
+              ________      ________      ________      ________
+                    0             0             0             0
+
+
+           LAMBDA
+              Y1            Y2            X1            X2
+              ________      ________      ________      ________
+ Y1                 0             0             0             0
+ Y2                 0             0             0             0
+ X1                 0             0             0             0
+ X2                 0             0             0             0
+
+
+           THETA
+              Y1            Y2            X1            X2
+              ________      ________      ________      ________
+ Y1                 0
+ Y2                 0             0
+ X1                 0             0             0
+ X2                 0             0             0             0
+
+
+           ALPHA
+              Y1            Y2            X1            X2
+              ________      ________      ________      ________
+                    0             0             0             0
+
+
+           BETA
+              Y1            Y2            X1            X2
+              ________      ________      ________      ________
+ Y1                 0             0             1             0
+ Y2                 0             0             0             2
+ X1                 0             0             0             0
+ X2                 0             0             0             0
+
+
+           PSI
+              Y1            Y2            X1            X2
+              ________      ________      ________      ________
+ Y1                 3
+ Y2                 0             4
+ X1                 0             0             0
+ X2                 0             0             0             0
+
+
+     PARAMETER SPECIFICATION FOR BETWEEN
+
+
+           NU
+              Y1            Y2            W
+              ________      ________      ________
+                    0             0             0
+
+
+           LAMBDA
+              S2            S1            Y1            Y2            W
+              ________      ________      ________      ________      ________
+ Y1                 0             0             0             0             0
+ Y2                 0             0             0             0             0
+ W                  0             0             0             0             0
+
+
+           THETA
+              Y1            Y2            W
+              ________      ________      ________
+ Y1                 0
+ Y2                 0             0
+ W                  0             0             0
+
+
+           ALPHA
+              S2            S1            Y1            Y2            W
+              ________      ________      ________      ________      ________
+                    5             6             7             8             0
+
+
+           BETA
+              S2            S1            Y1            Y2            W
+              ________      ________      ________      ________      ________
+ S2                 0             0             0             0             9
+ S1                 0             0             0             0            10
+ Y1                 0             0             0             0            11
+ Y2                 0             0             0             0            12
+ W                  0             0             0             0             0
+
+
+           PSI
+              S2            S1            Y1            Y2            W
+              ________      ________      ________      ________      ________
+ S2                13
+ S1                 0            14
+ Y1                 0             0            15
+ Y2                 0             0            16            17
+ W                  0             0             0             0             0
+
+
+     STARTING VALUES FOR WITHIN
+
+
+           NU
+              Y1            Y2            X1            X2
+              ________      ________      ________      ________
+                0.000         0.000         0.000         0.000
+
+
+           LAMBDA
+              Y1            Y2            X1            X2
+              ________      ________      ________      ________
+ Y1             1.000         0.000         0.000         0.000
+ Y2             0.000         1.000         0.000         0.000
+ X1             0.000         0.000         1.000         0.000
+ X2             0.000         0.000         0.000         1.000
+
+
+           THETA
+              Y1            Y2            X1            X2
+              ________      ________      ________      ________
+ Y1             0.000
+ Y2             0.000         0.000
+ X1             0.000         0.000         0.000
+ X2             0.000         0.000         0.000         0.000
+
+
+           ALPHA
+              Y1            Y2            X1            X2
+              ________      ________      ________      ________
+                0.000         0.000         0.000         0.000
+
+
+           BETA
+              Y1            Y2            X1            X2
+              ________      ________      ________      ________
+ Y1             0.000         0.000         0.000         0.000
+ Y2             0.000         0.000         0.000         0.000
+ X1             0.000         0.000         0.000         0.000
+ X2             0.000         0.000         0.000         0.000
+
+
+           PSI
+              Y1            Y2            X1            X2
+              ________      ________      ________      ________
+ Y1             2.042
+ Y2             0.000         5.189
+ X1             0.000         0.000         0.507
+ X2             0.000         0.000         0.000         0.578
+
+
+     STARTING VALUES FOR BETWEEN
+
+
+           NU
+              Y1            Y2            W
+              ________      ________      ________
+                0.000         0.000         0.000
+
+
+           LAMBDA
+              S2            S1            Y1            Y2            W
+              ________      ________      ________      ________      ________
+ Y1             0.000         0.000         1.000         0.000         0.000
+ Y2             0.000         0.000         0.000         1.000         0.000
+ W              0.000         0.000         0.000         0.000         1.000
+
+
+           THETA
+              Y1            Y2            W
+              ________      ________      ________
+ Y1             0.000
+ Y2             0.000         0.000
+ W              0.000         0.000         0.000
+
+
+           ALPHA
+              S2            S1            Y1            Y2            W
+              ________      ________      ________      ________      ________
+                0.000         0.000        -0.132         0.632         0.000
+
+
+           BETA
+              S2            S1            Y1            Y2            W
+              ________      ________      ________      ________      ________
+ S2             0.000         0.000         0.000         0.000         0.000
+ S1             0.000         0.000         0.000         0.000         0.000
+ Y1             0.000         0.000         0.000         0.000         0.000
+ Y2             0.000         0.000         0.000         0.000         0.000
+ W              0.000         0.000         0.000         0.000         0.000
+
+
+           PSI
+              S2            S1            Y1            Y2            W
+              ________      ________      ________      ________      ________
+ S2             1.000
+ S1             0.000         1.000
+ Y1             0.000         0.000         2.042
+ Y2             0.000         0.000         0.000         5.189
+ W              0.000         0.000         0.000         0.000         0.402
+
+
+TECHNICAL 8 OUTPUT
+
+
+   E STEP  ITER  LOGLIKELIHOOD    ABS CHANGE   REL CHANGE  ALGORITHM
+              1 -0.20167591D+04    0.0000000    0.0000000  EM
+              2 -0.17641962D+04  252.5629032    0.1252321  EM
+              3 -0.16867969D+04   77.3992654    0.0438723  EM
+              4 -0.16702420D+04   16.5549130    0.0098144  EM
+              5 -0.16664568D+04    3.7851645    0.0022662  EM
+              6 -0.16651602D+04    1.2966536    0.0007781  EM
+              7 -0.16645521D+04    0.6080330    0.0003651  EM
+              8 -0.16642159D+04    0.3362356    0.0002020  EM
+              9 -0.16640128D+04    0.2031192    0.0001221  EM
+             10 -0.16638833D+04    0.1294525    0.0000778  EM
+             11 -0.16637978D+04    0.0855397    0.0000514  EM
+             12 -0.16637398D+04    0.0580323    0.0000349  EM
+             13 -0.16636996D+04    0.0401726    0.0000241  EM
+             14 -0.16636713D+04    0.0282557    0.0000170  EM
+             15 -0.16636512D+04    0.0201303    0.0000121  EM
+             16 -0.16636367D+04    0.0144931    0.0000087  EM
+             17 -0.16636262D+04    0.0105255    0.0000063  EM
+             18 -0.16636185D+04    0.0077004    0.0000046  EM
+             19 -0.16636128D+04    0.0056679    0.0000034  EM
+             20 -0.16636086D+04    0.0041939    0.0000025  EM
+             21 -0.16636055D+04    0.0031168    0.0000019  EM
+             22 -0.16636032D+04    0.0023252    0.0000014  EM
+             23 -0.16636014D+04    0.0017402    0.0000010  EM
+             24 -0.16636001D+04    0.0013061    0.0000008  EM
+             25 -0.16635991D+04    0.0009826    0.0000006  EM
+
+
+     Beginning Time:  10:33:04
+        Ending Time:  10:33:04
+       Elapsed Time:  00:00:00
+
+
+
+MUTHEN & MUTHEN
+3463 Stoner Ave.
+Los Angeles, CA  90066
+
+Tel: (310) 391-9971
+Fax: (310) 391-8971
+Web: www.StatModel.com
+Support: Support@StatModel.com
+
+Copyright (c) 1998-2020 Muthen & Muthen

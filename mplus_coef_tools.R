@@ -120,12 +120,14 @@ coef_matrix <- function(coefs,
 
   # star formatter
   starify <- function(p) {
-    if (!stars || is.na(p)) return("")
-    if (p < .001) return("***")
-    if (p < .01)  return("**")
-    if (p < .05)  return("*")
-    if (p < .10)  return("\u2020") # dagger
-    ""
+    if (!stars) return(rep("", length(p)))
+    out <- rep("", length(p))
+    na_idx <- is.na(p)
+    out[!na_idx & p < .001] <- "***"
+    out[!na_idx & p >= .001 & p < .01] <- "**"
+    out[!na_idx & p >= .01 & p < .05] <- "*"
+    out[!na_idx & p >= .05 & p < .10] <- "\u2020" # dagger
+    out
   }
 
   fnum <- function(z, d = digits) {
@@ -133,8 +135,12 @@ coef_matrix <- function(coefs,
   }
 
   fp <- function(p) {
-    if (is.na(p)) return(NA_character_)
-    if (p < .001) "<.001" else paste0("=", formatC(p, format="f", digits = 3))
+    out <- rep(NA_character_, length(p))
+    na_idx <- is.na(p)
+    out[!na_idx & p < .001] <- "<.001"
+    ge_idx <- !na_idx & p >= .001
+    out[ge_idx] <- paste0("=", formatC(p[ge_idx], format = "f", digits = 3))
+    out
   }
 
   # build cell strings

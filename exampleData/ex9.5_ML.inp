@@ -1,0 +1,19 @@
+TITLE:	this is an example of two-level path 
+	analysis with continuous dependent
+	variables and random slopes
+DATA:	FILE IS ex9.5.dat;
+VARIABLE:	NAMES ARE y1 y2 x1 x2 w clus;
+	WITHIN = x1 x2;
+	BETWEEN = w;
+	CLUSTER IS clus;
+ANALYSIS:	TYPE = TWOLEVEL RANDOM;
+	ALGORITHM = INTEGRATION;
+MODEL:
+	%WITHIN%
+	s2 | y2 ON y1;
+	y2 ON x2;
+	s1 | y1 ON x2;
+	y1 ON x1;
+	%BETWEEN%
+	y1 y2 s1 s2 ON w;
+OUTPUT:	TECH1 TECH8;
