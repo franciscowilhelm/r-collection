@@ -5,3 +5,6 @@
 .Rproj
 tests/private/*
 .DS_Store
+
+# Folders
+codex_instructions/

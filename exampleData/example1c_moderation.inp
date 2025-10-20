@@ -1,0 +1,47 @@
+TITLE:	 generated dataset for 1-1-1 multilevel mediation 
+	with cross-level interaction, no random cov. structure
+DATA:
+ FILE = "example1crep1.dat";
+VARIABLE:
+		names are w y x m id;
+!		within = x;
+		between = w;
+		cluster = id;
+
+ANALYSIS: 
+TYPE = TWOLEVEL RANDOM;
+ESTIMATOR = BAYES;
+
+
+		
+model:
+%within%
+! mediation with random parameters
+sa | m on x;
+sb | y on m;
+scprime | y on x;
+
+%between%
+! intercepts of random slopes
+[sa] (ma);
+[sb] (mb);
+[scprime] (mc);
+
+! between-level mediation effects
+y ON m;
+m on x;
+y on x;
+
+! cross-level interaction for sa (first stage mediation)
+[w]; w;
+w with x;
+m on w;
+sa on w;
+m with sa;
+
+MODEL CONSTRAINT:
+	NEW(indi);
+	indi = ma*mb; 
+
+output:
+		tech9;

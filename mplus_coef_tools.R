@@ -13,18 +13,208 @@ sep_label <- function(coefout) {
   return(coefout)
 }
 
-coef_wrapper <- function(model, label_replace = NULL, params = c('regression'), bayes = FALSE, addci = FALSE) {
-  # get coefs
-  testcoefs <-
-    coef(model, params = params)
-  # make p values two tailed (rough) if Bayes
-  if(bayes == TRUE) {
-    testcoefs <-  testcoefs |> mutate(pval = pval*2)
+build_bayes_coefs <- function(model, params) {
+  raw <- model$parameters$unstandardized
+  if (is.null(raw)) {
+    stop("Model does not contain unstandardized parameters.")
   }
-  # add Confidence intervals
-  if(addci == TRUE) {
-    testcoefs <- left_join(testcoefs, confint(model,params), by = "Label")
-    
+
+  param_tables <- lapply(params, function(param) {
+    res <- MplusAutomation::paramExtract(raw, params = param)
+    if (is.null(res)) return(NULL)
+    res_df <- as.data.frame(res, stringsAsFactors = FALSE)
+    res_df$Section <- attr(res, "type")
+    res_df$Label <- switch(attr(res, "type"),
+                           regression = paste0(gsub("\\.ON", "<-", res_df$paramHeader), res_df$param),
+                           loading    = paste0(res_df$param, "<-", gsub("\\.BY|\\.\\|", "", res_df$paramHeader)),
+                           undirected = paste0(gsub("\\.WITH", "<->", res_df$paramHeader), res_df$param),
+                           expectation = paste0(res_df$param, "<-", gsub("\\.Means|\\.Intercepts|\\.Thresholds", "", res_df$paramHeader)),
+                           variability = paste0(res_df$param, "<->", res_df$param),
+                           new = res_df$param,
+                           res_df$param)
+    res_df
+  })
+
+  param_tables <- param_tables[!vapply(param_tables, is.null, logical(1))]
+  if (!length(param_tables)) {
+    return(tibble::tibble(Label = character(),
+                          est = numeric(),
+                          se = numeric(),
+                          pval = numeric(),
+                          sig = logical(),
+                          LowerCI = numeric(),
+                          UpperCI = numeric()))
+  }
+
+  out <- dplyr::bind_rows(param_tables)
+
+  extralabels <- rep("", nrow(out))
+  if ("LatentClass" %in% names(out)) {
+    extralabels <- paste0(extralabels, " C_", out[, "LatentClass"])
+  }
+  if ("BetweenWithin" %in% names(out)) {
+    extralabels <- paste0(extralabels, " ", substr(out[, "BetweenWithin"], 1, 1))
+  }
+  extralabels <- gsub("(\\s)(.*)$", "\\2", extralabels)
+  out$Label <- trimws(paste(extralabels, out$Label))
+
+  if ("posterior_sd" %in% names(out) && !"se" %in% names(out)) {
+    out$se <- out$posterior_sd
+  }
+  if ("posterior_sd" %in% names(out)) {
+    out$posterior_sd <- NULL
+  }
+  if (!"se" %in% names(out)) {
+    out$se <- NA_real_
+  }
+
+  if ("lower_2.5ci" %in% names(out)) {
+    out$LowerCI <- as.numeric(out$lower_2.5ci)
+    out$lower_2.5ci <- NULL
+  }
+  if ("upper_2.5ci" %in% names(out)) {
+    out$UpperCI <- as.numeric(out$upper_2.5ci)
+    out$upper_2.5ci <- NULL
+  }
+
+  numeric_cols <- intersect(c("est", "se", "LowerCI", "UpperCI"), names(out))
+  out[numeric_cols] <- lapply(out[numeric_cols], function(x) as.numeric(as.character(x)))
+
+  if ("pval" %in% names(out)) {
+    out$pval <- suppressWarnings(as.numeric(out$pval))
+  } else {
+    out$pval <- NA_real_
+  }
+  if ("sig" %in% names(out)) {
+    out$sig <- as.logical(out$sig)
+  } else {
+    out$sig <- rep(NA, nrow(out))
+  }
+  out$pval_note <- ifelse(!is.na(out$pval), "one-tailed", NA_character_)
+
+  missing_ci <- setdiff(c("LowerCI", "UpperCI"), names(out))
+  for (col in missing_ci) {
+    out[[col]] <- NA_real_
+  }
+
+  out <- dplyr::select(out, Label, est, se, pval, sig, LowerCI, UpperCI, pval_note)
+  tibble::as_tibble(out)
+}
+
+extract_random_slope_map <- function(model) {
+  lines <- tryCatch(model$input$model, error = function(e) NULL)
+  if (is.null(lines)) {
+    return(tibble::tibble(slope = character(), dv = character(), iv = character()))
+  }
+  lines <- stringr::str_trim(lines)
+  lines <- lines[nzchar(lines)]
+  lines <- lines[!stringr::str_starts(lines, "!")]
+  lines <- lines[stringr::str_detect(lines, "\\|")]
+  if (!length(lines)) {
+    return(tibble::tibble(slope = character(), dv = character(), iv = character()))
+  }
+  pattern <- stringr::regex("^([A-Za-z][A-Za-z0-9_]*)\\s*\\|\\s*([A-Za-z][A-Za-z0-9_]*)\\s+ON\\s+([^;!]+)", ignore_case = TRUE)
+  matches <- stringr::str_match(lines, pattern)
+  valid <- which(!is.na(matches[, 1]))
+  if (!length(valid)) {
+    return(tibble::tibble(slope = character(), dv = character(), iv = character()))
+  }
+  matches <- matches[valid, , drop = FALSE]
+  slopes <- toupper(matches[, 2])
+  dvs <- toupper(matches[, 3])
+  iv_part <- matches[, 4]
+  rows <- vector("list", length(slopes))
+  for (i in seq_along(slopes)) {
+    ivs <- stringr::str_split(stringr::str_trim(iv_part[i]), "\\s+|\\+")[[1]]
+    ivs <- ivs[nzchar(ivs)]
+    ivs <- stringr::str_replace_all(ivs, "[^A-Za-z0-9_]", "")
+    if (!length(ivs)) next
+    rows[[i]] <- tibble::tibble(
+      slope = slopes[i],
+      dv = dvs[i],
+      iv = toupper(ivs)
+    )
+  }
+  out <- dplyr::bind_rows(rows)
+  if (is.null(out)) {
+    return(tibble::tibble(slope = character(), dv = character(), iv = character()))
+  }
+  dplyr::distinct(out)
+}
+
+inject_random_slopes <- function(df, map) {
+  if (is.null(map) || !nrow(map)) return(df)
+  join_map <- dplyr::rename(map, dv_target = dv, iv_target = iv)
+  slope_rows <- df %>%
+    dplyr::filter(lvl == "B", dv_raw %in% join_map$slope) %>%
+    dplyr::left_join(join_map, by = c("dv_raw" = "slope"))
+
+  if (!nrow(slope_rows)) return(df)
+
+  slope_rows <- slope_rows %>%
+    dplyr::filter(
+      !is.na(dv_target),
+      !is.na(iv_target),
+      stringr::str_to_upper(iv_raw) %in% c("INTERCEPTS", "MEANS")
+    )
+
+  if (!nrow(slope_rows)) return(df)
+
+  slope_rows <- slope_rows %>%
+    dplyr::mutate(
+      lvl = "W",
+      dv_raw = dv_target,
+      iv_raw = iv_target,
+      DV = paste("W", dv_target),
+      IV = iv_target,
+      Label = paste0("W ", dv_target, "<-", iv_target),
+      random_slope = TRUE
+    ) %>%
+    dplyr::select(-dv_target, -iv_target)
+
+  dplyr::bind_rows(df, slope_rows)
+}
+
+coef_wrapper <- function(model, label_replace = NULL, params = c('regression'), bayes = NULL, addci = FALSE) {
+  if (inherits(model, "mplus.model.list")) {
+    if (length(model) == 1) {
+      model <- model[[1]]
+    } else {
+      stop("Multiple models supplied; please pass a single Mplus model object.")
+    }
+  }
+
+  detect_bayes <- function(m) {
+    estimator <- tryCatch(m$input$analysis$estimator, error = function(e) NULL)
+    if (is.null(estimator)) return(FALSE)
+    toupper(estimator) == "BAYES"
+  }
+
+  if (is.null(bayes)) {
+    bayes <- detect_bayes(model)
+  }
+
+  analysis_type <- tryCatch(model$input$analysis$type, error = function(e) NULL)
+  has_random <- !is.null(analysis_type) && any(grepl("RANDOM", toupper(analysis_type), fixed = TRUE))
+  random_map <- if (has_random) extract_random_slope_map(model) else tibble::tibble(slope = character(), dv = character(), iv = character())
+  params_full <- unique(c(params, if (nrow(random_map)) "expectation" else character()))
+
+  # get coefs
+  if (isTRUE(bayes)) {
+    testcoefs <- build_bayes_coefs(model, params_full)
+    if (!addci) {
+      testcoefs <- dplyr::select(testcoefs, -dplyr::any_of(c("LowerCI", "UpperCI")))
+    }
+  } else {
+    testcoefs <- coef(model, params = params_full)
+    if (nrow(testcoefs) == 0) {
+      return(testcoefs)
+    }
+    if (isTRUE(addci)) {
+      testcoefs <- dplyr::left_join(testcoefs, confint(model, params), by = "Label")
+    }
+    testcoefs$sig <- rep(NA, nrow(testcoefs))
+    testcoefs$pval_note <- NA_character_
   }
   # add DV and IV and replace labels
   testcoefs <- sep_label(testcoefs)
@@ -33,8 +223,21 @@ coef_wrapper <- function(model, label_replace = NULL, params = c('regression'), 
       testcoefs |> mutate(DV = str_replace_all(DV, label_replace),
                           IV = str_replace_all(IV, label_replace))
   }
+  if (nrow(random_map)) {
+    if (!is.null(label_replace)) {
+      random_map <- random_map |>
+        mutate(
+          dv = str_replace_all(dv, label_replace),
+          iv = str_replace_all(iv, label_replace),
+          slope = str_replace_all(slope, label_replace)
+        )
+    }
+    attr(testcoefs, "random_slopes") <- random_map
+  } else {
+    attr(testcoefs, "random_slopes") <- NULL
+  }
 
-  
+
   # testcoefs <- bind_rows(testcoefs, coef(model, params = 'new') |> select(Label, est, se, pval) |> mutate(IV = str_replace_all(Label, label_replace)))
   testcoefs
 }
@@ -97,6 +300,9 @@ coef_matrix <- function(coefs,
       iv_raw = str_trim(str_remove(IV, "^[WB]\\s+"))
     )
 
+  random_map <- attr(coefs, "random_slopes")
+  x <- inject_random_slopes(x, random_map)
+
   # optional pretty names
   re_labs <- function(v) {
     if (is.null(varmap)) return(v)
@@ -108,6 +314,8 @@ coef_matrix <- function(coefs,
       dv = re_labs(dv_raw),
       iv = re_labs(iv_raw)
     )
+
+  sig_vec <- if ("sig" %in% names(x)) x$sig else rep(NA, nrow(x))
 
   # ensure CI columns; if absent, approximate normal CI from SE
   if (!all(c("LowerCI","UpperCI") %in% names(x))) {
@@ -121,6 +329,11 @@ coef_matrix <- function(coefs,
   # star formatter
   starify <- function(p) {
     if (!stars) return(rep("", length(p)))
+    if (any(!is.na(sig_vec))) {
+      out <- rep("", length(p))
+      out[which(sig_vec %in% TRUE)] <- "*"
+      return(out)
+    }
     out <- rep("", length(p))
     na_idx <- is.na(p)
     out[!na_idx & p < .001] <- "***"
