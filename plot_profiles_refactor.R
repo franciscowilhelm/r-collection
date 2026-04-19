@@ -9,21 +9,21 @@ plot_profiles <- function(lpafit, df, scale_values = TRUE,
   # add proportions to classlabel
   if("tidyProfile" %in% class(lpafit)) {
     lpa_df <- lpafit[["dff"]] %>% select(all_of(class)) #currently does not support class variable argument, revise
-    classlabels_prop <- str_c((lpafit[["model"]][["class_counts"]][["mostLikely"]][["proportion"]]*100) %>% round(1), "%")
+    classlabels_prop <- str_c((lpafit[["model"]][["class_counts"]][["modelEstimated"]][["proportion"]]*100) %>% round(1), "%")
   } 
   else if("mplus.model" %in% class(lpafit)) {
     lpa_df <- lpafit[["savedata"]][class] %>% rename(Class = class)
     # next step depends upon whether or not there are multiple latent class variaables
     # if only one, there is no variable
     # if multiple, there is variable "variable" to indicate for
-    if(has_name(lpafit[["class_counts"]][["mostLikely"]], "variable")) {
+    if(has_name(lpafit[["class_counts"]][["modelEstimated"]], "variable")) {
       classlabels_prop <- str_c((
-        lpafit[["class_counts"]][["mostLikely"]] |> filter(variable == !!class) |>
+        lpafit[["class_counts"]][["modelEstimated"]] |> filter(variable == !!class) |>
           mutate(proportion = (proportion * 100) |> round(1)) |> select(proportion) |> as_vector()
       ), "%")
     } else {
       classlabels_prop <- str_c((
-        lpafit[["class_counts"]][["mostLikely"]] |>
+        lpafit[["class_counts"]][["modelEstimated"]] |>
           mutate(proportion = (proportion * 100) |> round(1)) |> select(proportion) |> as_vector()
       ), "%")
     }
