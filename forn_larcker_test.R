@@ -1,7 +1,8 @@
 # fornell larcker test function
 forn_larcker_test <- function(lavmodel, x, y, summary = FALSE, x.only = TRUE) {
-  avevar_x <- semTools::reliability(lavmodel)["avevar",x] # average variance extracted from indicators for construct X
-  avevar_y <- semTools::reliability(lavmodel)["avevar",y] # average variance extracted from indicators for construct Y
+  avevar <- semTools::AVE(lavmodel)
+  avevar_x <- avevar[x] # average variance extracted from indicators for construct X
+  avevar_y <- avevar[y] # average variance extracted from indicators for construct Y
   latcor_sq <- lavInspect(lavmodel, what = "cor.lv")[x,y]^2 #squared latent correlation
   if(x.only == TRUE) {
     criterion_met <-  avevar_x > latcor_sq
@@ -32,7 +33,7 @@ forn_larcker_test <- function(lavmodel, x, y, summary = FALSE, x.only = TRUE) {
     }
     if(criterion_met) {
       return(str_c("Average variance extracted for first factor is:", round(avevar_x,2),
-                   ". Latent squared correlation is: ", round(latcor,2),
+                   ". Latent squared correlation is: ", round(latcor_sq,2),
                    ". Fornell-Larcker criterion successfully met."))
     }
     
